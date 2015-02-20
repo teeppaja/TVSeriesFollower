@@ -1,0 +1,48 @@
+----------------------------------------------------------------
+Tue Feb 10 22:10:26 EET 2015:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.11.1.1 - (1616546): instance a816c00e-014b-751d-4131-0000006c3578 
+on database directory C:\Users\Teemu\MyDB with class loader sun.misc.Launcher$AppClassLoader@1d16e93 
+Loaded from file:/C:/Users/Teemu/Desktop/TVSeriesFollower/TVSeriesFollower/lib/derby.jar
+java.vendor=Oracle Corporation
+java.runtime.version=1.8.0_31-b13
+user.dir=C:\Users\Teemu\Desktop\TVSeriesFollower\TVSeriesFollower
+os.name=Windows 7
+os.arch=x86
+os.version=6.1
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+Tue Feb 10 22:10:26 EET 2015:
+Shutting down instance a816c00e-014b-751d-4131-0000006c3578 on database directory C:\Users\Teemu\MyDB with class loader sun.misc.Launcher$AppClassLoader@1d16e93 
+----------------------------------------------------------------
+Tue Feb 10 22:10:26 EET 2015:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.11.1.1 - (1616546): instance 08264012-014b-751d-4131-0000006c3578 
+on database directory C:\Users\Teemu\MyDB with class loader sun.misc.Launcher$AppClassLoader@1d16e93 
+Loaded from file:/C:/Users/Teemu/Desktop/TVSeriesFollower/TVSeriesFollower/lib/derby.jar
+java.vendor=Oracle Corporation
+java.runtime.version=1.8.0_31-b13
+user.dir=C:\Users\Teemu\Desktop\TVSeriesFollower\TVSeriesFollower
+os.name=Windows 7
+os.arch=x86
+os.version=6.1
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+Tue Feb 10 22:10:26 EET 2015:
+Shutting down instance 08264012-014b-751d-4131-0000006c3578 on database directory C:\Users\Teemu\MyDB with class loader sun.misc.Launcher$AppClassLoader@1d16e93 
+----------------------------------------------------------------
+Tue Feb 10 22:10:26 EET 2015:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.11.1.1 - (1616546): instance 6839c016-014b-751d-4131-0000006c3578 
+on database directory C:\Users\Teemu\MyDB with class loader sun.misc.Launcher$AppClassLoader@1d16e93 
+Loaded from file:/C:/Users/Teemu/Desktop/TVSeriesFollower/TVSeriesFollower/lib/derby.jar
+java.vendor=Oracle Corporation
+java.runtime.version=1.8.0_31-b13
+user.dir=C:\Users\Teemu\Desktop\TVSeriesFollower\TVSeriesFollower
+os.name=Windows 7
+os.arch=x86
+os.version=6.1
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+Tue Feb 10 22:10:26 EET 2015:
+Shutting down instance 6839c016-014b-751d-4131-0000006c3578 on database directory C:\Users\Teemu\MyDB with class loader sun.misc.Launcher$AppClassLoader@1d16e93 
