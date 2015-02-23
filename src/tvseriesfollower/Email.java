@@ -27,7 +27,7 @@ public class Email {
      */
     public static void Send(String recipientEmail, String title, String message) throws AddressException, MessagingException {
     	final String username = "TVSeriesFollower";
-    	final String password = "XXXXXXXXXX";
+    	final String password = "X";
         Email.Send(username, password, recipientEmail, "", title, message);
     }
     
@@ -38,7 +38,7 @@ public class Email {
     	final String message = "TVSeriesFollower has encountered " + errors + " errors." + eol + "Last time you received this email: " + lasterrordate + "," + eol
     			+ "which was " + difference + " hours ago.";
     	final String username = "TVSeriesFollower";
-    	final String password = "XXXXXXXXXX";
+    	final String password = "X";
         Email.Send(username, password, recipientEmail, "", title, message);
     }
 
