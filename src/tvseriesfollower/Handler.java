@@ -32,31 +32,30 @@ public class Handler {
 			int nSeason = -1;
 			int nEpisode = -1;
 			Matcher matcher = pattern.matcher(magnets.get(i));
-			if (matcher.find()==true) {
 				while (matcher.find()) {
 					try {
 						seriesEpisode = matcher.group();
 						nSeason = Integer.parseInt(seriesEpisode.substring(1, 3));
 						nEpisode = Integer.parseInt(seriesEpisode.substring(4));
+						//System.out.println(seriesEpisode);
 					} catch (Exception e) {
 						Email.Send("t.s.partanen@gmail.com", "HÄLYTYS", "TVSeriesFollower ei osannut parsea seasonia/episodia (SxxExx) ja on sammutettu.");
 						System.exit(0);
 					}
 				}
-			} else {
-				pattern = Pattern.compile("\\d{2}[x]\\d{2}");
+				/*pattern = Pattern.compile("\\d{2}[x]\\d{2}");
 				matcher = pattern.matcher(magnets.get(i));
 				while (matcher.find()) {
 					try {
 						seriesEpisode = matcher.group();
 						nSeason = Integer.parseInt(seriesEpisode.substring(0, seriesEpisode.indexOf("x")));
 						nEpisode = Integer.parseInt(seriesEpisode.substring(seriesEpisode.indexOf("x")+1));
+						System.out.println(seriesEpisode);
 					} catch (Exception e) {
 						Email.Send("t.s.partanen@gmail.com", "HÄLYTYS", "TVSeriesFollower ei osannut parsea seasonia/episodia (SSxEE) ja on sammutettu.");
 						System.exit(0);
 					}
-				}	
-			}
+				}*/
 			for (int j = 0; j < series.size(); j++) {
 				if (magnets.get(i).toLowerCase().replace(".", "").contains(series.get(j).getName().toLowerCase().replace(" ", "")) 
 						&& (magnets.get(i).contains("720p") || magnets.get(i).contains("1080p")) 
@@ -70,6 +69,7 @@ public class Handler {
 					setEpisode(s);
 					for (int z = 0; z < followers.size(); z++) {
 						Email.Send(followers.get(z), topic, message);
+						//System.out.println("Mailia lähtee: " + followers.get(z) + " sarja: " + topic + nSeason + " " + nEpisode);
 					}
 					
 				}
