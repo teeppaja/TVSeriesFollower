@@ -27,39 +27,45 @@ public class Handler {
 		String message;
 		String topic;
 		String seriesEpisode = "";
+		int nSeason = -1;
+		int nEpisode = -1;
+		boolean SxxExx;
 		for (int i = 0; i < magnets.size(); i++) {
 			Pattern pattern = Pattern.compile("[S]\\d{2}[E]\\d{2}");
-			int nSeason = -1;
-			int nEpisode = -1;
+			nSeason = -1;
+			nEpisode = -1;
+			SxxExx = false;
 			Matcher matcher = pattern.matcher(magnets.get(i));
-				while (matcher.find()) {
-					try {
-						seriesEpisode = matcher.group();
-						nSeason = Integer.parseInt(seriesEpisode.substring(1, 3));
-						nEpisode = Integer.parseInt(seriesEpisode.substring(4));
-						//System.out.println(seriesEpisode);
-					} catch (Exception e) {
-						Email.Send("t.s.partanen@gmail.com", "HÄLYTYS", "TVSeriesFollower ei osannut parsea seasonia/episodia (SxxExx) ja on sammutettu.");
-						System.exit(0);
-					}
+			while (matcher.find()) {
+				try {
+					seriesEpisode = matcher.group();
+					nSeason = Integer.parseInt(seriesEpisode.substring(1, 3));
+					nEpisode = Integer.parseInt(seriesEpisode.substring(4));
+					SxxExx = true;
+				} catch (Exception e) {
+					Email.Send("t.s.partanen@gmail.com", "HÄLYTYS", "TVSeriesFollower ei osannut parsea seasonia/episodia (SxxExx) ja on sammutettu.");
+					System.exit(0);
 				}
-				/*pattern = Pattern.compile("\\d{2}[x]\\d{2}");
+			}
+			if (SxxExx==false) {
+				pattern = Pattern.compile("\\d[x]\\d{2}");
 				matcher = pattern.matcher(magnets.get(i));
 				while (matcher.find()) {
 					try {
 						seriesEpisode = matcher.group();
 						nSeason = Integer.parseInt(seriesEpisode.substring(0, seriesEpisode.indexOf("x")));
 						nEpisode = Integer.parseInt(seriesEpisode.substring(seriesEpisode.indexOf("x")+1));
-						System.out.println(seriesEpisode);
 					} catch (Exception e) {
 						Email.Send("t.s.partanen@gmail.com", "HÄLYTYS", "TVSeriesFollower ei osannut parsea seasonia/episodia (SSxEE) ja on sammutettu.");
 						System.exit(0);
 					}
-				}*/
+				}
+			}
+
 			for (int j = 0; j < series.size(); j++) {
 				if (magnets.get(i).toLowerCase().replace(".", "").contains(series.get(j).getName().toLowerCase().replace(" ", "")) 
 						&& (magnets.get(i).contains("720p") || magnets.get(i).contains("1080p")) 
-						&& (series.get(j).getLatestSeason()<nSeason || series.get(j).getLatestEpisode()<nEpisode)) {
+						&& (series.get(j).getLatestSeason()<nSeason || (series.get(j).getLatestSeason()==nSeason && series.get(j).getLatestEpisode()<nEpisode))) {
 					topic = "New episode of " + series.get(j).getName() + " released";
 					message = "Hello!<br>New episode (" + seriesEpisode + ") of " + series.get(j).getName() + " is out.<br>"
 							+ "You can download the episode by clicking the following link or by copying the magnet URL and adding it manyally to your torrent client:<br>"
@@ -69,7 +75,7 @@ public class Handler {
 					setEpisode(s);
 					for (int z = 0; z < followers.size(); z++) {
 						Email.Send(followers.get(z), topic, message);
-						//System.out.println("Mailia lähtee: " + followers.get(z) + " sarja: " + topic + nSeason + " " + nEpisode);
+						//System.out.println("Mailia lähtee: " + followers.get(z) + " sarja: " + topic + " season:" + nSeason + " episode:" + nEpisode);
 					}
 					
 				}

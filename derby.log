@@ -1,6 +1,6 @@
 ----------------------------------------------------------------
-Mon Feb 23 13:18:29 EET 2015:
-Booting Derby version The Apache Software Foundation - Apache Derby - 10.11.1.1 - (1616546): instance a816c00e-014b-b628-eac6-000000554318 
+Fri Feb 27 18:09:48 EET 2015:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.11.1.1 - (1616546): instance a816c00e-014b-cbcd-0db1-0000003ff948 
 on database directory C:\Users\Teemu\MyDB with class loader sun.misc.Launcher$AppClassLoader@1d16e93 
 Loaded from file:/C:/Users/Teemu/Desktop/TVSeriesFollower/TVSeriesFollower/lib/derby.jar
 java.vendor=Oracle Corporation
@@ -12,21 +12,5 @@ os.version=6.1
 derby.system.home=null
 Database Class Loader started - derby.database.classpath=''
 ----------------------------------------------------------------
-Mon Feb 23 13:18:30 EET 2015:
-Shutting down instance a816c00e-014b-b628-eac6-000000554318 on database directory C:\Users\Teemu\MyDB with class loader sun.misc.Launcher$AppClassLoader@1d16e93 
-----------------------------------------------------------------
-Mon Feb 23 13:18:30 EET 2015:
-Booting Derby version The Apache Software Foundation - Apache Derby - 10.11.1.1 - (1616546): instance 08264012-014b-b628-eac6-000000554318 
-on database directory C:\Users\Teemu\MyDB with class loader sun.misc.Launcher$AppClassLoader@1d16e93 
-Loaded from file:/C:/Users/Teemu/Desktop/TVSeriesFollower/TVSeriesFollower/lib/derby.jar
-java.vendor=Oracle Corporation
-java.runtime.version=1.8.0_31-b13
-user.dir=C:\Users\Teemu\Desktop\TVSeriesFollower\TVSeriesFollower
-os.name=Windows 7
-os.arch=x86
-os.version=6.1
-derby.system.home=null
-Database Class Loader started - derby.database.classpath=''
-----------------------------------------------------------------
-Mon Feb 23 13:18:30 EET 2015:
-Shutting down instance 08264012-014b-b628-eac6-000000554318 on database directory C:\Users\Teemu\MyDB with class loader sun.misc.Launcher$AppClassLoader@1d16e93 
+Fri Feb 27 18:09:48 EET 2015:
+Shutting down instance a816c00e-014b-cbcd-0db1-0000003ff948 on database directory C:\Users\Teemu\MyDB with class loader sun.misc.Launcher$AppClassLoader@1d16e93 
