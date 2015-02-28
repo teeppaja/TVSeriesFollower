@@ -27,8 +27,11 @@ public class Tvseriesfollower {
 		Date lasterrordate = new Date();
 		String generate_URL = "https://eztv.ch/sort/50/";
 		ArrayList<String> magnets = new ArrayList<String>();
+		ArrayList<String> urls = new ArrayList<String>();
 		String inputLine;
 		String all="";
+		String alku = "<td class=\"category-row\"><span class=\"torrent-icon torrent-icon-seriestv\" title=\"series & tv\"></i></td><td class=\"title-row\"><a href=\"";
+		String loppu = "</td></tr>";
 		
 		while (true) {
 			try {
@@ -60,6 +63,43 @@ public class Tvseriesfollower {
 			magnets.clear();
 			all = "";
 			inputLine = "";
+			
+			ArrayList<Series> newEpisode = Handler.getNewEpisodeForSeries();
+			for (int i = 0; i < newEpisode.size(); i++) {
+				try {
+					generate_URL = "https://isohunt.to/torrents/?ihq=" + newEpisode.get(i).getName() + "+" + "s" + newEpisode.get(i).getLatestSeason() 
+							+ "e" + newEpisode.get(i).getLatestEpisode() + "&status=1&iht=8";
+					URL data = new URL(generate_URL);
+					HttpURLConnection con = (HttpURLConnection) data.openConnection();
+					con.setRequestProperty("User-Agent", "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2");
+					BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+					while ((inputLine = in.readLine()) != null) {
+						all=all + inputLine;
+					}
+					in.close();
+					con.disconnect();
+				} catch (Exception e) {
+					errors = errors+1;
+					if (errors==10) {
+						long difference = TimeUnit.MILLISECONDS.toHours(new Date().getTime() - lasterrordate.getTime());
+						Email.Error(errors, lasterrordate, difference);
+						lasterrordate = new Date();
+						errors=0;
+					}
+					//e.printStackTrace();
+				}
+				pattern = Pattern.compile(alku + "(.*?)" + loppu);
+				matcher = pattern.matcher(all);
+				while (matcher.find()) {
+					urls.add(matcher.group(1));
+				}
+				Handler.isoHuntCheck(urls);
+				urls.clear();
+				all = "";
+				inputLine = "";
+				TimeUnit.SECONDS.sleep(1);
+			}
+			
 			TimeUnit.MINUTES.sleep(30);
 		}
 	}

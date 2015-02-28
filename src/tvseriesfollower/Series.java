@@ -15,6 +15,13 @@ public class Series {
 		this.latestSeason = latestSeason;
 		this.latestEpisode = latestEpisode;
 	}
+	
+	public Series(int latestSeason, int latestEpisode) {
+		super();
+		this.name = null;
+		this.latestSeason = latestSeason;
+		this.latestEpisode = latestEpisode;
+	}
 
 	public String getName() {
 		return name;

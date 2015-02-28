@@ -3,9 +3,12 @@ package tvseriesfollower;
 //Otettu netistä ja muokattu omaan käyttöön sopivaksi
 
 import com.sun.mail.smtp.SMTPTransport;
+
 import java.security.Security;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Properties;
+
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
@@ -30,6 +33,13 @@ public class Email {
     	final String password = "X";
         Email.Send(username, password, recipientEmail, "", title, message);
     }
+    
+	public static void massMail(ArrayList<String> followers, String emailTitle, String emailMessage) throws AddressException, MessagingException {
+		for (int z = 0; z < followers.size(); z++) {
+			Email.Send(followers.get(z), emailTitle, emailMessage);
+			//Email.Send("t.s.partanen@gmail.com", emailTitle, emailMessage);
+		}
+	}
     
     public static void Error(int errors, Date lasterrordate, long difference) throws AddressException, MessagingException {
     	String eol = System.getProperty("line.separator");
