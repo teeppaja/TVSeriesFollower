@@ -52,5 +52,4 @@ public class Series {
 		return "Series [name=" + name + ", latestSeason=" + latestSeason
 				+ ", latestEpisode=" + latestEpisode + "]";
 	}
-
 }

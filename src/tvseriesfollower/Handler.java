@@ -34,7 +34,16 @@ public class Handler {
     private static Matcher matcher;
     private static Series serie;
 
-
+    /**
+     * Checks given list for new episodes of wanted series
+     * @param magnets list of magnet-links
+     * @throws AddressException
+     * @throws MessagingException
+     * @throws SQLException
+     * @throws InstantiationException
+     * @throws IllegalAccessException
+     * @throws ClassNotFoundException
+     */
 	public static void check(ArrayList<String> magnets) throws AddressException, 
 	MessagingException, SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
 		ArrayList<Series> series = getSeries();
@@ -57,46 +66,75 @@ public class Handler {
 		} catch (Exception e) {
 			Email.Send("t.s.partanen@gmail.com", "HÄLYTYS - eztv", "TVSeriesFollower kohtasi virheen käsitellessään eztv-dataa ja on sammutettu." + eol 
 					+ "Alla virhekoodi:" + eol + e.toString());
-			//e.printStackTrace();
 			System.exit(0);
 		}
 	}
 	
+	/**
+	 * Checks given urls for new episodes of wanted series
+	 * @param urls list of substrings from html-code. One substring contains all information about one torrent
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 * @throws ClassNotFoundException
+	 * @throws SQLException
+	 * @throws AddressException
+	 * @throws MessagingException
+	 */
 	public static void isoHuntCheck(ArrayList<String> urls) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException, AddressException, MessagingException {
 		ArrayList<Series> series = getSeries();
+		ArrayList<Isohuntlink> isohuntlinks = new ArrayList<Isohuntlink>(); //List on neatly packed information
+		ArrayList<Isohuntlink> enoughseeds = new ArrayList<Isohuntlink>(); //Same as isohuntlinks, but contains only torrents that have enough seeds
 		
 		for (int i = 0; i < urls.size(); i++) {
+			
 			try {
 				emailMessage = null;
 				emailTitle = null;
-				torUrl = torrentUrl(urls.get(i));
-				torName = torrentName(urls.get(i));
-				torSeeds = torrentSeeds(urls.get(i));
-				Series serie = serieNumbers(torName);
-				nSeason = serie.getLatestSeason();
-				nEpisode = serie.getLatestEpisode();
-				
-				for (int j = 0; j < series.size(); j++) {
-					if (isThisNew (torName, series.get(j))==true && torSeeds>2000) {
-						followers = getFollowersforSeries(series.get(j).getName());
-						serie.setName(series.get(j).getName());
+				torUrl = torrentUrl(urls.get(i)); //URL to single torrent file
+				torName = torrentName(urls.get(i)); //Name given to a single torrent
+				torSeeds = torrentSeeds(urls.get(i)); //Number of seeds for a single torrent
+				Series serie = serieNumbers(torName); //Season and episode taken from torrent name. Note that Serie-object's parameter 'name' is null
+				nSeason = serie.getLatestSeason(); //Season is put to global variable, other methods will need it
+				nEpisode = serie.getLatestEpisode(); //Episode is put to global variable, other methods will need it
+				Isohuntlink ihlink = new Isohuntlink(torUrl, torName, serie.getLatestSeason(), serie.getLatestEpisode(), torSeeds);
+				isohuntlinks.add(ihlink);
+			} catch (Exception e) {
+				Email.Send("t.s.partanen@gmail.com", "HÄLYTYS - isoHunt", "TVSeriesFollower kohtasi virheen käsitellessään isoHunt-dataa ja on sammutettu." + eol 
+						+ "Alla virhekoodi:" + eol + e.toString());
+				System.exit(0);
+			}
+			
+			for (int j = 0; j < isohuntlinks.size(); j++) {
+				if (isohuntlinks.get(j).getSeeds()>=2000) {
+					enoughseeds.add(isohuntlinks.get(j));
+				}
+			}
+			
+			for (int j = 0; j < enoughseeds.size(); j++) {
+				System.out.println(enoughseeds.get(j).getLinkName() + " " + enoughseeds.get(j).getSeeds());
+				for (int z = 0; z < series.size(); z++) {
+					if (isThisNew (torName, series.get(z))==true) {
+						followers = getFollowersforSeries(series.get(z).getName());
+						serie.setName(series.get(z).getName());
 						emailMessage = "Hello!<br>New episode (" + seriesEpisode + ") of " + serie.getName() + " is out.<br>"
 								+ "Link to the torrent:<br>"
-								+ "<a href=" + torUrl + "\">" + torUrl + "</a><br>" 
+								+ "<a href=\"" + torUrl + "\">" + torUrl + "</a><br>" 
 								+ "Easier clickable link to the torrent file coming soon!" + "<br><br><i>-TVSeriesFollower</i>";
 						setEpisode(serie);
 						Email.massMail(followers, emailTitle, emailMessage);
 					}
 				}
-			} catch (Exception e) {
-				Email.Send("t.s.partanen@gmail.com", "HÄLYTYS - isoHunt", "TVSeriesFollower kohtasi virheen käsitellessään isoHunt-dataa ja on sammutettu." + eol 
-						+ "Alla virhekoodi:" + eol + e.toString());
-				//e.printStackTrace();
-				System.exit(0);
 			}
+			isohuntlinks.clear();
+			enoughseeds.clear();
 		}
 	}
 	
+	/**
+	 * Takes a url to a torrent file from given html-substring
+	 * @param url given html-substring
+	 * @return link to a torrent
+	 */
 	private static String torrentUrl(String url) {
 		torUrl = null;
 		pattern = Pattern.compile("(.*)\"><span>");
@@ -107,6 +145,11 @@ public class Handler {
 		return torUrl;
 	}
 	
+	/**
+	 * Takes a torrent's name from given html-substring
+	 * @param url given html-substring
+	 * @return name, that the uploader has given to the torrent. User sees this name in the isoHunt file listing, if the search would have been done manually
+	 */
 	private static String torrentName(String url) {
 		torName = null;
 		pattern = Pattern.compile("\"><span>(.*)</span></a>");
@@ -117,6 +160,11 @@ public class Handler {
 		return torName;
 	}
 	
+	/**
+	 * Takes a torrent's seeds from given html-substring
+	 * @param url given html-substring
+	 * @return amount of seeds of a torrent
+	 */
 	private static int torrentSeeds(String url) {
 		sSeeds = null;
 		torSeeds = -1;
@@ -130,6 +178,13 @@ public class Handler {
 		return torSeeds;
 	}
 	
+	/**
+	 * Parses season and episode from given url or magnet
+	 * @param input url or magnet, where the season and episode is wanted
+	 * @return Serie-object that contains the season and episode, but doesn't contain the name of the serie
+	 * @throws AddressException
+	 * @throws MessagingException
+	 */
 	private static Series serieNumbers (String input) throws AddressException, MessagingException {
 		pattern = Pattern.compile("[S]\\d{2}[E]\\d{2}");
 		nSeason = -1;
@@ -165,6 +220,12 @@ public class Handler {
 		return serie;
 	}
 	
+	/**
+	 * Compares url or magnet to current information from database and checks if given url or magnet contains new episode
+	 * @param input html-substring or magnet that potentially contains new episode of a wanted serie
+	 * @param series Serie name and known latest season and episode from database
+	 * @return
+	 */
 	private static boolean isThisNew(String input, Series series) {
 		input = input.replace(" ", "");
 		input = input.replace(".", "");
@@ -177,6 +238,14 @@ public class Handler {
 		return false;
 	}
 	
+	/**
+	 * Gets series information from database and increases episode number by one. This is used for searching series with new episodes
+	 * @return Most recent serie information from database, where episode number is increased by one
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 * @throws ClassNotFoundException
+	 * @throws SQLException
+	 */
 	public static ArrayList<Series> getNewEpisodeForSeries() throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
 		ArrayList<Series> series = getSeries();
 		ArrayList<Series> newEpisode = new ArrayList<>();
@@ -186,6 +255,14 @@ public class Handler {
 		return newEpisode;
 	}
 	
+	/**
+	 * Gets series information from database and increases season number by one and sets episode number to one. This is used for searching series with new season
+	 * @return Most recent serie information from database, where season number is increased by one
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 * @throws ClassNotFoundException
+	 * @throws SQLException
+	 */
 	public static ArrayList<Series> getNewSeasonForSeries() throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
 		ArrayList<Series> series = getSeries();
 		ArrayList<Series> newSeason = new ArrayList<>();
@@ -195,6 +272,16 @@ public class Handler {
 		return newSeason;
 	}
 	
+	/**
+	 * Sets given serie information to database
+	 * @param serie new information that needs to be updated to the database
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 * @throws ClassNotFoundException
+	 * @throws SQLException
+	 * @throws AddressException
+	 * @throws MessagingException
+	 */
 	private static void setEpisode(Series serie) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException, AddressException, MessagingException {
 		try {
 			openConnection();
@@ -213,9 +300,16 @@ public class Handler {
 		finally {
 			closeConnection();
 		}
-		
 	}
 	
+	/**
+	 * Retrieves serie information from the database
+	 * @return wanted serie information
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 * @throws ClassNotFoundException
+	 * @throws SQLException
+	 */
 	public static ArrayList<Series> getSeries() throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
 		ArrayList<Series> series = new ArrayList<Series>();
 		openConnection();
@@ -233,7 +327,6 @@ public class Handler {
 	        }
 	        catch (SQLException sqlExcept)
 	        {
-	            //sqlExcept.printStackTrace();
 	        }
 		 finally {
 			 closeConnection();
@@ -241,6 +334,15 @@ public class Handler {
 		return series;
 	}
 	
+	/**
+	 * Retrieves followers for a serie
+	 * @param followedSeries Serie name, which followers are wanted
+	 * @return list of followers for given serie
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 * @throws ClassNotFoundException
+	 * @throws SQLException
+	 */
 	private static ArrayList<String> getFollowersforSeries(String followedSeries) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
 		ArrayList<String> followers = new ArrayList<String>();
 		openConnection();
@@ -255,7 +357,6 @@ public class Handler {
         }
         catch (SQLException sqlExcept)
         {
-            //sqlExcept.printStackTrace();
         }
 	 finally {
 		 closeConnection();
@@ -263,11 +364,21 @@ public class Handler {
 		return followers;
 	}
 	
+	/**
+	 * Opens connection to the database
+	 * @throws SQLException
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 * @throws ClassNotFoundException
+	 */
 	private static void openConnection() throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
 		Class.forName("org.apache.derby.jdbc.EmbeddedDriver").newInstance();
 		conn = DriverManager.getConnection(dbURL);
 	}
 	
+	/**
+	 * Closes connection to the database
+	 */
 	private static void closeConnection() {
 		try {
 			if (statement != null) {
@@ -278,7 +389,6 @@ public class Handler {
                 conn.close();
 			}
 		} catch (Exception e) {
-			
 		}
 	}
 }

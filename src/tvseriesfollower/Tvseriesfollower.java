@@ -33,8 +33,10 @@ public class Tvseriesfollower {
 		String alku = "<td class=\"category-row\"><span class=\"torrent-icon torrent-icon-seriestv\" title=\"series & tv\"></i></td><td class=\"title-row\"><a href=\"";
 		String loppu = "</td></tr>";
 		
-		while (true) {
+		while (true) { //This program is supposed to be an infinite loop
 			try {
+				
+				//EZTV
 				generate_URL = "https://eztv.ch/sort/50/";
 				URL data = new URL(generate_URL);
 				HttpURLConnection con = (HttpURLConnection) data.openConnection();
@@ -53,21 +55,22 @@ public class Tvseriesfollower {
 					lasterrordate = new Date();
 					errors=0;
 				}
-				//e.printStackTrace();
 			}
 			Pattern pattern = Pattern.compile("magnet:(.*?)\" class");
 			Matcher matcher = pattern.matcher(all);
 			while (matcher.find()) {
 				magnets.add("magnet:" + matcher.group(1));
 			}
-			System.out.println(all);
 			Handler.check(magnets);
 			magnets.clear();
 			all = "";
 			inputLine = "";
 			
+			//ISOHUNT, NEW EPISODE
 			ArrayList<Series> newEpisode = Handler.getNewEpisodeForSeries();
+			
 			for (int i = 0; i < newEpisode.size(); i++) {
+				System.out.println("Supposed new episode: " + newEpisode.get(i).getName() + " Season " + newEpisode.get(i).getLatestSeason() + " Episode " + newEpisode.get(i).getLatestEpisode());
 				try {
 					generate_URL = "https://isohunt.to/torrents/?ihq=" + newEpisode.get(i).getName() + "+" + "s" + newEpisode.get(i).getLatestSeason() 
 							+ "e" + newEpisode.get(i).getLatestEpisode() + "&status=1&iht=8";
@@ -88,7 +91,6 @@ public class Tvseriesfollower {
 						lasterrordate = new Date();
 						errors=0;
 					}
-					//e.printStackTrace();
 				}
 				pattern = Pattern.compile(alku + "(.*?)" + loppu);
 				matcher = pattern.matcher(all);
@@ -102,7 +104,45 @@ public class Tvseriesfollower {
 				TimeUnit.SECONDS.sleep(1);
 			}
 			
-			TimeUnit.MINUTES.sleep(30);
+			//ISOHUNT, NEW SEASON
+			ArrayList<Series> newSeason = Handler.getNewSeasonForSeries();
+			
+			for (int i = 0; i < newSeason.size(); i++) {
+				System.out.println("Supposed new season: " + newSeason.get(i).getName() + " Season " + newSeason.get(i).getLatestSeason() + " Episode " + newSeason.get(i).getLatestEpisode());
+				try {
+					generate_URL = "https://isohunt.to/torrents/?ihq=" + newSeason.get(i).getName() + "+" + "s" + newSeason.get(i).getLatestSeason() 
+							+ "e" + newSeason.get(i).getLatestEpisode() + "&status=1&iht=8";
+					URL data = new URL(generate_URL);
+					HttpURLConnection con = (HttpURLConnection) data.openConnection();
+					con.setRequestProperty("User-Agent", "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2");
+					BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+					while ((inputLine = in.readLine()) != null) {
+						all=all + inputLine;
+					}
+					in.close();
+					con.disconnect();
+				} catch (Exception e) {
+					errors = errors+1;
+					if (errors==100) {
+						long difference = TimeUnit.MILLISECONDS.toHours(new Date().getTime() - lasterrordate.getTime());
+						Email.Error(errors, lasterrordate, difference);
+						lasterrordate = new Date();
+						errors=0;
+					}
+				}
+				pattern = Pattern.compile(alku + "(.*?)" + loppu);
+				matcher = pattern.matcher(all);
+				while (matcher.find()) {
+					urls.add(matcher.group(1));
+				}
+				Handler.isoHuntCheck(urls);
+				urls.clear();
+				all = "";
+				inputLine = "";
+				TimeUnit.SECONDS.sleep(1);
+			}
+			
+			TimeUnit.MINUTES.sleep(45);
 		}
 	}
 }
