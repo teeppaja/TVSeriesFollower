@@ -166,7 +166,9 @@ public class Handler {
 	}
 	
 	private static boolean isThisNew(String input, Series series) {
-		if (input.toLowerCase().replace(" ", "").contains(series.getName().toLowerCase().replace(" ", "")) 
+		input = input.replace(" ", "");
+		input = input.replace(".", "");
+		if (input.toLowerCase().contains(series.getName().toLowerCase().replace(" ", "")) 
 				&& (input.contains("720p") || input.contains("1080p")) 
 				&& (series.getLatestSeason()<nSeason || (series.getLatestSeason()==nSeason && series.getLatestEpisode()<nEpisode))) {
 			emailTitle = "New episode of " + series.getName() + " released";

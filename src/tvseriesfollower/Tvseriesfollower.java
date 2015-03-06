@@ -25,7 +25,7 @@ public class Tvseriesfollower {
 	private static void Thread() throws AddressException, MessagingException, InterruptedException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
 		int errors = 0;
 		Date lasterrordate = new Date();
-		String generate_URL = "https://eztv.ch/sort/50/";
+		String generate_URL;
 		ArrayList<String> magnets = new ArrayList<String>();
 		ArrayList<String> urls = new ArrayList<String>();
 		String inputLine;
@@ -35,6 +35,7 @@ public class Tvseriesfollower {
 		
 		while (true) {
 			try {
+				generate_URL = "https://eztv.ch/sort/50/";
 				URL data = new URL(generate_URL);
 				HttpURLConnection con = (HttpURLConnection) data.openConnection();
 				con.setRequestProperty("User-Agent", "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2");
@@ -46,7 +47,7 @@ public class Tvseriesfollower {
 				con.disconnect();
 			} catch (Exception e) {
 				errors = errors+1;
-				if (errors==10) {
+				if (errors==100) {
 					long difference = TimeUnit.MILLISECONDS.toHours(new Date().getTime() - lasterrordate.getTime());
 					Email.Error(errors, lasterrordate, difference);
 					lasterrordate = new Date();
@@ -59,6 +60,7 @@ public class Tvseriesfollower {
 			while (matcher.find()) {
 				magnets.add("magnet:" + matcher.group(1));
 			}
+			System.out.println(all);
 			Handler.check(magnets);
 			magnets.clear();
 			all = "";
@@ -80,7 +82,7 @@ public class Tvseriesfollower {
 					con.disconnect();
 				} catch (Exception e) {
 					errors = errors+1;
-					if (errors==10) {
+					if (errors==100) {
 						long difference = TimeUnit.MILLISECONDS.toHours(new Date().getTime() - lasterrordate.getTime());
 						Email.Error(errors, lasterrordate, difference);
 						lasterrordate = new Date();
