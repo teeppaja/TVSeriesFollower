@@ -7,6 +7,8 @@ import java.util.regex.Pattern;
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 
+import org.json.JSONObject;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -22,10 +24,6 @@ public class Handler {
     private static ArrayList<String> followers;
     private static String emailMessage;
     private static String emailTitle;
-    private static String torUrl;
-    private static String torName;
-    private static String sSeeds;
-    private static int torSeeds;
     private static String seriesEpisode;
     private static int nSeason;
     private static int nEpisode;
@@ -70,112 +68,32 @@ public class Handler {
 		}
 	}
 	
-	/**
-	 * Checks given urls for new episodes of wanted series
-	 * @param urls list of substrings from html-code. One substring contains all information about one torrent
-	 * @throws InstantiationException
-	 * @throws IllegalAccessException
-	 * @throws ClassNotFoundException
-	 * @throws SQLException
-	 * @throws AddressException
-	 * @throws MessagingException
-	 */
-	public static void isoHuntCheck(ArrayList<String> urls) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException, AddressException, MessagingException {
-		ArrayList<Series> series = getSeries();
-		ArrayList<Isohuntlink> isohuntlinks = new ArrayList<Isohuntlink>(); //List on neatly packed information
-		ArrayList<Isohuntlink> enoughseeds = new ArrayList<Isohuntlink>(); //Same as isohuntlinks, but contains only torrents that have enough seeds
-		
-		for (int i = 0; i < urls.size(); i++) {
-			
-			try {
-				emailMessage = null;
-				emailTitle = null;
-				torUrl = torrentUrl(urls.get(i)); //URL to single torrent file
-				torName = torrentName(urls.get(i)); //Name given to a single torrent
-				torSeeds = torrentSeeds(urls.get(i)); //Number of seeds for a single torrent
-				Series serie = serieNumbers(torName); //Season and episode taken from torrent name. Note that Serie-object's parameter 'name' is null
-				nSeason = serie.getLatestSeason(); //Season is put to global variable, other methods will need it
-				nEpisode = serie.getLatestEpisode(); //Episode is put to global variable, other methods will need it
-				Isohuntlink ihlink = new Isohuntlink(torUrl, torName, serie.getLatestSeason(), serie.getLatestEpisode(), torSeeds);
-				isohuntlinks.add(ihlink);
-			} catch (Exception e) {
-				Email.Send("t.s.partanen@gmail.com", "HÄLYTYS - isoHunt", "TVSeriesFollower kohtasi virheen käsitellessään isoHunt-dataa ja on sammutettu." + eol 
-						+ "Alla virhekoodi:" + eol + e.toString());
-				System.exit(0);
-			}
-			
-			for (int j = 0; j < isohuntlinks.size(); j++) {
-				if (isohuntlinks.get(j).getSeeds()>=2000) {
-					enoughseeds.add(isohuntlinks.get(j));
+	public static void checkStrike(ArrayList<JSONObject> jsonObjects, Series serie) throws AddressException, MessagingException {
+		for (int i = 0; i < jsonObjects.size(); i++) {
+			int sseeds = (Integer) jsonObjects.get(i).get("seeds");
+			String title = (String) jsonObjects.get(i).get("torrent_title");
+			title = title.replace(" ", "").replace(",", "");
+			String category = (String) jsonObjects.get(i).get("torrent_category");
+			if (category.equalsIgnoreCase("TV") && sseeds>2000 && title.toLowerCase().contains(serie.getName().toLowerCase().replace(" ", "")) 
+					&& (title.contains("720p") || title.contains("1080p"))) {
+				String magnet = (String) jsonObjects.get(i).get("magnet_uri");
+				String url = (String) jsonObjects.get(i).get("page");
+				try {
+					followers = getFollowersforSeries(serie.getName());
+					emailTitle = "New episode of " + serie.getName() + " released";
+					emailMessage = "Hello!<br>New episode " + "of " + serie.getName() + " is out.<br>"
+							+ "You can download the episode by clicking the following link or by copying the magnet URL and adding it manyally to your torrent client:<br>"
+							+ "<a href=\"" + magnet + "\">" + magnet + "</a><br><br>Link to the torrent page: " + "<a href=\"" + url + "\">" + url + "</a><br><br><br><i>-TVSeriesFollower</i>";
+					setEpisode(serie);
+					Email.massMail(followers, emailTitle, emailMessage);
+					break;
+				} catch (InstantiationException | IllegalAccessException | ClassNotFoundException | SQLException e) {
+					Email.Send("t.s.partanen@gmail.com", "HÄLYTYS - Strike", "TVSeriesFollower kohtasi virheen käsitellessään Strike-dataa ja on sammutettu." + eol 
+							+ "Alla virhekoodi:" + eol + e.toString());
+					System.exit(0);
 				}
 			}
-			
-			for (int j = 0; j < enoughseeds.size(); j++) {
-				System.out.println(enoughseeds.get(j).getLinkName() + " " + enoughseeds.get(j).getSeeds());
-				for (int z = 0; z < series.size(); z++) {
-					if (isThisNew (torName, series.get(z))==true) {
-						followers = getFollowersforSeries(series.get(z).getName());
-						serie.setName(series.get(z).getName());
-						emailMessage = "Hello!<br>New episode (" + seriesEpisode + ") of " + serie.getName() + " is out.<br>"
-								+ "Link to the torrent:<br>"
-								+ "<a href=\"" + torUrl + "\">" + torUrl + "</a><br>" 
-								+ "Easier clickable link to the torrent file coming soon!" + "<br><br><i>-TVSeriesFollower</i>";
-						setEpisode(serie);
-						Email.massMail(followers, emailTitle, emailMessage);
-					}
-				}
-			}
-			isohuntlinks.clear();
-			enoughseeds.clear();
-		}
-	}
-	
-	/**
-	 * Takes a url to a torrent file from given html-substring
-	 * @param url given html-substring
-	 * @return link to a torrent
-	 */
-	private static String torrentUrl(String url) {
-		torUrl = null;
-		pattern = Pattern.compile("(.*)\"><span>");
-		matcher = pattern.matcher(url);
-		while (matcher.find()) {
-			torUrl = "https://isohunt.to" + matcher.group(1);
-		}
-		return torUrl;
-	}
-	
-	/**
-	 * Takes a torrent's name from given html-substring
-	 * @param url given html-substring
-	 * @return name, that the uploader has given to the torrent. User sees this name in the isoHunt file listing, if the search would have been done manually
-	 */
-	private static String torrentName(String url) {
-		torName = null;
-		pattern = Pattern.compile("\"><span>(.*)</span></a>");
-		matcher = pattern.matcher(url);
-		while (matcher.find()) {
-			torName = matcher.group(1);
-		}
-		return torName;
-	}
-	
-	/**
-	 * Takes a torrent's seeds from given html-substring
-	 * @param url given html-substring
-	 * @return amount of seeds of a torrent
-	 */
-	private static int torrentSeeds(String url) {
-		sSeeds = null;
-		torSeeds = -1;
-		seriesEpisode = null;
-		pattern = Pattern.compile("<td class=\"seeders-row \\w{2}\">(.*)</td><td class=\"rating-row\">");
-		matcher = pattern.matcher(url);
-		while (matcher.find()) {
-			sSeeds = matcher.group(1);
-			torSeeds = Integer.parseInt(sSeeds);
-		}
-		return torSeeds;
+		}		
 	}
 	
 	/**
