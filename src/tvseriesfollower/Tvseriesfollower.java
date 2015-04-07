@@ -1,15 +1,14 @@
 package tvseriesfollower;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,7 +17,6 @@ import javax.mail.internet.AddressException;
 
 import org.json.JSONObject;
 
-import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.JavaScriptPage;
 import com.gargoylesoftware.htmlunit.Page;
 import com.gargoylesoftware.htmlunit.TextPage;
@@ -29,11 +27,17 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 public class Tvseriesfollower {
 
-    public static void main(String[] args) throws IOException, AddressException, MessagingException, InterruptedException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
-    	Thread();
+    public static void main(String[] args) throws AddressException, MessagingException {
+    	try {
+    		thread();
+		} catch (Throwable e) {
+			Email.UnkownCrash(e);
+			System.exit(0);
+		}
+    	
     }
 
-	private static void Thread() throws AddressException, MessagingException, InterruptedException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException, FailingHttpStatusCodeException, MalformedURLException, IOException {
+	private static void thread() throws AddressException, MessagingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException, InterruptedException {
 		int errors = 0;
 		Date lasterrordate = new Date();
 		String generate_URL;
@@ -76,80 +80,65 @@ public class Tvseriesfollower {
 			
 			//STRIKE, looking for new episode
 			ArrayList<Series> newEpisode = Handler.getNewEpisodeForSeries();
-			
-			for (int i = 0; i < newEpisode.size(); i++) {
-				ArrayList<JSONObject> jsonObjects = new ArrayList<JSONObject>();
-				String sSeason = Integer.toString(newEpisode.get(i).getLatestSeason());
-				String sEpisode = Integer.toString(newEpisode.get(i).getLatestEpisode());
-				if (newEpisode.get(i).getLatestSeason()<10) {
-					sSeason = "0"+newEpisode.get(i).getLatestSeason();
-				}
-				if (newEpisode.get(i).getLatestEpisode()<10) {
-					sEpisode = "0"+newEpisode.get(i).getLatestEpisode();
-				}
-				String url = "https://getstrike.net/api/v2/torrents/search/?phrase=" + newEpisode.get(i).getName() + " S" + sSeason + "E" + sEpisode;
-				WebClient webClient = new WebClient();
-			    webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
-			    webClient.getOptions().setPrintContentOnFailingStatusCode(false);
-			    int status = webClient.getPage(url).getWebResponse().getStatusCode();
-			    if (status>=200 && status<=299) {
-			    	Page page = webClient.getPage(url);
-			    	String pageSource = getPageSource(page);
-			    	pattern = Pattern.compile("\\{\"torrent_hash(.*?)\"\\}");
-					matcher = pattern.matcher(pageSource);
-					while (matcher.find()) {
-						JSONObject jsonObject = new JSONObject(matcher.group(0));
-						jsonObjects.add(jsonObject);
-					}
-				}
-			    webClient.closeAllWindows();
-			    if (jsonObjects.size()!=0) {
-				    Handler.checkStrike(jsonObjects, newEpisode.get(i));
-				    jsonObjects.clear();
-				}
-			    TimeUnit.SECONDS.sleep(1);
-			}
+			newStrikeStuff(newEpisode);
 			
 			//STRIKE, looking for new season
 			ArrayList<Series> newSeason = Handler.getNewSeasonForSeries();
+			newStrikeStuff(newSeason);
 			
-			for (int i = 0; i < newSeason.size(); i++) {
-				ArrayList<JSONObject> jsonObjects = new ArrayList<JSONObject>();
-				String sSeason = Integer.toString(newSeason.get(i).getLatestSeason());
-				String sEpisode = Integer.toString(newSeason.get(i).getLatestEpisode());
-				if (newSeason.get(i).getLatestSeason()<10) {
-					sSeason = "0"+newSeason.get(i).getLatestSeason();
-				}
-				if (newSeason.get(i).getLatestEpisode()<10) {
-					sEpisode = "0"+newSeason.get(i).getLatestEpisode();
-				}
-				String url = "https://getstrike.net/api/v2/torrents/search/?phrase=" + newSeason.get(i).getName() + " S" + sSeason + "E" + sEpisode;
-				WebClient webClient = new WebClient();
-			    webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
-			    webClient.getOptions().setPrintContentOnFailingStatusCode(false);
-			    int status = webClient.getPage(url).getWebResponse().getStatusCode();
-			    if (status>=200 && status<=299) {
-			    	Page page = webClient.getPage(url);
-			    	String pageSource = getPageSource(page);
-			    	pattern = Pattern.compile("\\{\"torrent_hash(.*?)\"\\}");
-					matcher = pattern.matcher(pageSource);
-					while (matcher.find()) {
-						JSONObject jsonObject = new JSONObject(matcher.group(0));
-						jsonObjects.add(jsonObject);
-					}
-				}
-			    webClient.closeAllWindows();
-			    if (jsonObjects.size()!=0) {
-				    Handler.checkStrike(jsonObjects, newSeason.get(i));
-				    jsonObjects.clear();
-				}
-			    TimeUnit.SECONDS.sleep(1);
-			}
-
 			TimeUnit.MINUTES.sleep(45);
 		}
 	}
 	
+	private static void newStrikeStuff(ArrayList<Series> newStuff) throws InterruptedException {
+		for (int i = 0; i < newStuff.size(); i++) {
+			ArrayList<JSONObject> jsonObjects = new ArrayList<JSONObject>();
+			String sSeason = Integer.toString(newStuff.get(i).getLatestSeason());
+			String sEpisode = Integer.toString(newStuff.get(i).getLatestEpisode());
+			if (newStuff.get(i).getLatestSeason()<10) {
+				sSeason = "0"+newStuff.get(i).getLatestSeason();
+			}
+			if (newStuff.get(i).getLatestEpisode()<10) {
+				sEpisode = "0"+newStuff.get(i).getLatestEpisode();
+			}
+			try {
+				String url = "https://getstrike.net/api/v2/torrents/search/?phrase=" + newStuff.get(i).getName() + " S" + sSeason + "E" + sEpisode;
+				WebClient webClient = new WebClient();
+				java.util.logging.Logger.getLogger("com.gargoylesoftware.htmlunit").setLevel(Level.OFF);
+			    webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
+			    webClient.getOptions().setPrintContentOnFailingStatusCode(false);
+			    webClient.getOptions().setThrowExceptionOnScriptError(false);
+			    webClient.getOptions().setCssEnabled(false);
+				try {
+					webClient.getPage(url);
+				} catch (Exception e) {
+					break;
+				}
+			    int status = webClient.getPage(url).getWebResponse().getStatusCode();
+			    if (status>=200 && status<=299) {
+			    	Page page = webClient.getPage(url);
+			    	String pageSource = getPageSource(page);
+			    	Pattern pattern = Pattern.compile("\\{\"torrent_hash(.*?)\"\\}");
+					Matcher matcher = pattern.matcher(pageSource);
+					while (matcher.find()) {
+						JSONObject jsonObject = new JSONObject(matcher.group(0));
+						jsonObjects.add(jsonObject);
+					}
+				}
+			    webClient.closeAllWindows();
+			    if (jsonObjects.size()!=0) {
+				    Handler.checkStrike(jsonObjects, newStuff.get(i));
+				    jsonObjects.clear();
+				}
+			} catch (Exception e) {
+				break;
+			}
+			
+		    TimeUnit.SECONDS.sleep(1);
+		}
+		
+	}
+
 	private static String getPageSource(Page page) {
 		if(page instanceof HtmlPage) {
 			return ((HtmlPage)page).asXml();
