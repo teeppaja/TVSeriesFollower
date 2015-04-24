@@ -68,7 +68,7 @@ public class Tvseriesfollower {
 					errors=0;
 				}
 			}
-			Pattern pattern = Pattern.compile("magnet:(.*?)\" class");
+			Pattern pattern = Pattern.compile("<a href=\"magnet:(.*?)\" class");
 			Matcher matcher = pattern.matcher(all);
 			while (matcher.find()) {
 				magnets.add("magnet:" + matcher.group(1));
@@ -85,7 +85,7 @@ public class Tvseriesfollower {
 			//STRIKE, looking for new season
 			ArrayList<Series> newSeason = Handler.getNewSeasonForSeries();
 			newStrikeStuff(newSeason);
-			
+			System.out.println("Nukkumaan...");
 			TimeUnit.MINUTES.sleep(45);
 		}
 	}

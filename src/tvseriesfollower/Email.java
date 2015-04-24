@@ -20,7 +20,7 @@ import javax.mail.internet.MimeMessage;
 
 public class Email {
 	final private static String username = "TVSeriesFollower";
-	final private static String password = "x";
+	final private static String password = "x"; //Ofc not a real password. The program will crash if you don't change this to the real one.
 	final private static String eol = System.getProperty("line.separator");
     private Email() {
     }
