@@ -85,7 +85,6 @@ public class Tvseriesfollower {
 			//STRIKE, looking for new season
 			ArrayList<Series> newSeason = Handler.getNewSeasonForSeries();
 			newStrikeStuff(newSeason);
-			System.out.println("Nukkumaan...");
 			TimeUnit.MINUTES.sleep(45);
 		}
 	}

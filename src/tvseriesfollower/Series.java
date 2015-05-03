@@ -4,6 +4,7 @@ public class Series {
 	String name;
 	int latestSeason;
 	int latestEpisode;
+	String subtitles;
 	
 	public Series() {
 		super();
@@ -21,6 +22,15 @@ public class Series {
 		this.name = null;
 		this.latestSeason = latestSeason;
 		this.latestEpisode = latestEpisode;
+	}
+
+	public Series(String name, int latestSeason, int latestEpisode,
+			String subtitles) {
+		super();
+		this.name = name;
+		this.latestSeason = latestSeason;
+		this.latestEpisode = latestEpisode;
+		this.subtitles = subtitles;
 	}
 
 	public String getName() {
@@ -47,9 +57,18 @@ public class Series {
 		this.latestEpisode = latestEpisode;
 	}
 
+	public String getSubtitles() {
+		return subtitles;
+	}
+
+	public void setSubtitles(String subtitles) {
+		this.subtitles = subtitles;
+	}
+
 	@Override
 	public String toString() {
 		return "Series [name=" + name + ", latestSeason=" + latestSeason
-				+ ", latestEpisode=" + latestEpisode + "]";
+				+ ", latestEpisode=" + latestEpisode + ", subtitles="
+				+ subtitles + "]";
 	}
 }

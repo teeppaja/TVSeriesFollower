@@ -55,7 +55,9 @@ public class Handler {
 						serie.setName(series.get(j).getName());
 						emailMessage = "Hello!<br>New episode (" + seriesEpisode + ") of " + series.get(j).getName() + " is out.<br>"
 								+ "You can download the episode by clicking the following link or by copying the magnet URL and adding it manyally to your torrent client:<br>"
-								+ "<a href=\"" + magnets.get(i) + "\">" + magnets.get(i) + "</a><br><br><br><i>-TVSeriesFollower</i>";
+								+ "<a href=\"" + magnets.get(i) + "\">" + magnets.get(i) + "</a><br><br>"
+								+ "You can find subtitles for this episode from here once they are released:<br>" 
+								+ "<a href=\"" + series.get(j).getSubtitles() + "\">" + series.get(j).getSubtitles() + "</a><br><br><br><i>-TVSeriesFollower</i>";
 						setEpisode(serie);
 						Email.massMail(followers, emailTitle, emailMessage);
 					}
@@ -83,7 +85,9 @@ public class Handler {
 					emailTitle = "New episode of " + serie.getName() + " released";
 					emailMessage = "Hello!<br>New episode " + "of " + serie.getName() + " is out.<br>"
 							+ "You can download the episode by clicking the following link or by copying the magnet URL and adding it manyally to your torrent client:<br>"
-							+ "<a href=\"" + magnet + "\">" + magnet + "</a><br><br>Link to the torrent page: " + "<a href=\"" + url + "\">" + url + "</a><br><br><br><i>-TVSeriesFollower</i>";
+							+ "<a href=\"" + magnet + "\">" + magnet + "</a><br><br>Link to the torrent page: " + "<a href=\"" + url + "\">" + url + "</a><br><br>"
+							+ "You can find subtitles for this episode from here once they are released:<br>" 
+							+ "<a href=\"" + serie.getSubtitles() + "\">" + serie.getSubtitles() + "</a><br><br><br><i>-TVSeriesFollower</i>";
 					setEpisode(serie);
 					Email.massMail(followers, emailTitle, emailMessage);
 					break;
@@ -168,7 +172,7 @@ public class Handler {
 		ArrayList<Series> series = getSeries();
 		ArrayList<Series> newEpisode = new ArrayList<>();
 		for (int i = 0; i < series.size(); i++) {
-			newEpisode.add(new Series(series.get(i).getName(), series.get(i).getLatestSeason(), series.get(i).getLatestEpisode()+1));
+			newEpisode.add(new Series(series.get(i).getName(), series.get(i).getLatestSeason(), series.get(i).getLatestEpisode()+1, series.get(i).getSubtitles()));
 		}
 		return newEpisode;
 	}
@@ -185,7 +189,7 @@ public class Handler {
 		ArrayList<Series> series = getSeries();
 		ArrayList<Series> newSeason = new ArrayList<>();
 		for (int i = 0; i < series.size(); i++) {
-			newSeason.add(new Series(series.get(i).getName(), series.get(i).getLatestSeason()+1, 1));
+			newSeason.add(new Series(series.get(i).getName(), series.get(i).getLatestSeason()+1, 1, series.get(i).getSubtitles()));
 		}
 		return newSeason;
 	}
@@ -239,7 +243,8 @@ public class Handler {
 					String name = results.getString("name");
 					int season = results.getInt("latest_season");
 					int episode = results.getInt("latest_episode");
-					Series s = new Series(name, season, episode);
+					String subtitles = results.getString("subtitles");
+					Series s = new Series(name, season, episode, subtitles);
 					series.add(s);
 				}
 	        }

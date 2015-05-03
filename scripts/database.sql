@@ -2,6 +2,7 @@ create TABLE TVSeriesFollower.Series (
 name varchar(50) NOT NULL,
 latest_season int NOT NULL,
 latest_episode int NOT NULL,
+subtitles varchar(100),
 primary key (name)
 );
 
@@ -18,3 +19,5 @@ primary key (usersSeries_id),
 foreign key (address) references TVSeriesFollower.Users (address),
 foreign key (name) references TVSeriesFollower.Series (name)
 );
+
+ALTER TABLE TVSeriesFollower.Series ADD COLUMN subtitles varchar(100);
