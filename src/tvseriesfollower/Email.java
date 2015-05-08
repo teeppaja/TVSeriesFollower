@@ -36,26 +36,36 @@ public class Email {
     
 	public static void massMail(ArrayList<String> followers, String emailTitle, String emailMessage) throws AddressException, MessagingException {
 		for (int z = 0; z < followers.size(); z++) {
-			Email.Send(followers.get(z), emailTitle, emailMessage);
+			Email.send(followers.get(z), emailTitle, emailMessage);
 		}
 	}
 	
-	public static void UnkownCrash(Throwable e) throws AddressException, MessagingException {
+	public static void unknownCrash(Throwable e) throws AddressException, MessagingException {
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = new PrintWriter(sw);
 		e.printStackTrace(pw);
     	final String recipientEmail = "t.s.partanen@gmail.com";
     	final String title = "TVSeriesFollower has crashed";
     	final String message = "TVSeriesFollower has encountered an unsuspected crash. Stack trace: " + sw.toString();
-        Email.Send(recipientEmail, title, message);
+        Email.send(recipientEmail, title, message);
+	}
+	
+	public static void knownCrash(Throwable e, String module) throws AddressException, MessagingException {
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter(sw);
+		e.printStackTrace(pw);
+    	final String recipientEmail = "t.s.partanen@gmail.com";
+    	final String title = "Hälytys - " + module;
+    	final String message = "TVSeriesFollower encountered an error while processing " + module + " data and is shut down. Stack trace:" + sw.toString();
+        Email.send(recipientEmail, title, message);
 	}
     
-    public static void Error(int errors, Date lasterrordate, long difference) throws AddressException, MessagingException {
+    public static void error(int errors, Date lasterrordate, long difference) throws AddressException, MessagingException {
     	final String recipientEmail = "t.s.partanen@gmail.com";
     	final String title = "TVSeriesFollower has encountered too many errors";
     	final String message = "TVSeriesFollower has encountered " + errors + " errors." + eol + "Last time you received this email: " + lasterrordate + "," + eol
     			+ "which was " + difference + " hours ago.";
-        Email.Send(recipientEmail, title, message);
+        Email.send(recipientEmail, title, message);
     }
 
     /**
@@ -70,7 +80,7 @@ public class Email {
      * @throws AddressException if the email address parse failed
      * @throws MessagingException if the connection is dead or not in the connected state or if the message is not a MimeMessage
      */
-    public static void Send(String recipientEmail, String title, String message) throws AddressException, MessagingException {
+    public static void send(String recipientEmail, String title, String message) throws AddressException, MessagingException {
         Security.addProvider(new com.sun.net.ssl.internal.ssl.Provider());
         final String SSL_FACTORY = "javax.net.ssl.SSLSocketFactory";
 

@@ -18,19 +18,12 @@ import java.sql.Statement;
 
 public class Handler {
 	private static String dbURL = "jdbc:derby:C:/Users/Teemu/MyDB";
-    private static String eol = System.getProperty("line.separator");
     private static Connection conn = null;
     private static Statement statement = null;
     private static ArrayList<String> followers;
     private static String emailMessage;
     private static String emailTitle;
     private static String seriesEpisode;
-    private static int nSeason;
-    private static int nEpisode;
-    private static boolean SxxExx;
-    private static Pattern pattern;
-    private static Matcher matcher;
-    private static Series serie;
 
     /**
      * Checks given list for new episodes of wanted series
@@ -47,25 +40,22 @@ public class Handler {
 		ArrayList<Series> series = getSeries();
 		try {
 			for (int i = 0; i < magnets.size(); i++) {
-				Series serie = (serieNumbers(magnets.get(i)));
-
-				for (int j = 0; j < series.size(); j++) {
-					if (isThisNew (magnets.get(i), series.get(j))==true) {
-						followers = getFollowersforSeries(series.get(j).getName());
-						serie.setName(series.get(j).getName());
-						emailMessage = "Hello!<br>New episode (" + seriesEpisode + ") of " + series.get(j).getName() + " is out.<br>"
-								+ "You can download the episode by clicking the following link or by copying the magnet URL and adding it manyally to your torrent client:<br>"
-								+ "<a href=\"" + magnets.get(i) + "\">" + magnets.get(i) + "</a><br><br>"
-								+ "You can find subtitles for this episode from here once they are released:<br>" 
-								+ "<a href=\"" + series.get(j).getSubtitles() + "\">" + series.get(j).getSubtitles() + "</a><br><br><br><i>-TVSeriesFollower</i>";
-						setEpisode(serie);
-						Email.massMail(followers, emailTitle, emailMessage);
-					}
+				Series serie = infoFromMagnet(magnets.get(i), series);
+				if (serie != null) {
+					followers = getFollowersforSeries(serie.getName());
+					emailMessage = "Hello!<br>New episode (" + seriesEpisode + ") of " + serie.getName() + " is out.<br>"
+							+ "You can download the episode by clicking the following link or by copying the magnet URL and adding it manyally to your torrent client:<br>"
+							+ "<a href=\"" + magnets.get(i) + "\">" + magnets.get(i) + "</a><br><br>"
+							+ "You can find subtitles for this episode from here once they are released:<br>" 
+							+ "<a href=\"" + serie.getSubtitles() + "\">" + serie.getSubtitles() + "</a><br><br><br><i>-TVSeriesFollower</i>";
+					setEpisode(serie);
+					Email.massMail(followers, emailTitle, emailMessage);
+					series = getSeries();
+				} else {
 				}
 			}
-		} catch (Exception e) {
-			Email.Send("t.s.partanen@gmail.com", "HÄLYTYS - eztv", "TVSeriesFollower kohtasi virheen käsitellessään eztv-dataa ja on sammutettu." + eol 
-					+ "Alla virhekoodi:" + eol + e.toString());
+		} catch (Throwable e) {
+			Email.knownCrash(e, "EZTV");
 			System.exit(0);
 		}
 	}
@@ -74,7 +64,7 @@ public class Handler {
 		for (int i = 0; i < jsonObjects.size(); i++) {
 			int sseeds = (Integer) jsonObjects.get(i).get("seeds");
 			String title = (String) jsonObjects.get(i).get("torrent_title");
-			title = title.replace(" ", "").replace(",", "");
+			title = title.replace(" ", "").replace(",", "").replace(".", "");
 			String category = (String) jsonObjects.get(i).get("torrent_category");
 			if (category.equalsIgnoreCase("TV") && sseeds>2000 && title.toLowerCase().contains(serie.getName().toLowerCase().replace(" ", "")) 
 					&& (title.contains("720p") || title.contains("1080p"))) {
@@ -91,9 +81,8 @@ public class Handler {
 					setEpisode(serie);
 					Email.massMail(followers, emailTitle, emailMessage);
 					break;
-				} catch (InstantiationException | IllegalAccessException | ClassNotFoundException | SQLException e) {
-					Email.Send("t.s.partanen@gmail.com", "HÄLYTYS - Strike", "TVSeriesFollower kohtasi virheen käsitellessään Strike-dataa ja on sammutettu." + eol 
-							+ "Alla virhekoodi:" + eol + e.toString());
+				} catch (Throwable e) {
+					Email.knownCrash(e, "Strike");
 					System.exit(0);
 				}
 			}
@@ -102,62 +91,88 @@ public class Handler {
 	
 	/**
 	 * Parses season and episode from given url or magnet
-	 * @param input url or magnet, where the season and episode is wanted
+	 * @param magnet url or magnet, where the season and episode is wanted
+	 * @param series 
 	 * @return Serie-object that contains the season and episode, but doesn't contain the name of the serie
 	 * @throws AddressException
 	 * @throws MessagingException
 	 */
-	private static Series serieNumbers (String input) throws AddressException, MessagingException {
-		pattern = Pattern.compile("[S]\\d{2}[E]\\d{2}");
-		nSeason = -1;
-		nEpisode = -1;
-		SxxExx = false;
-		matcher = pattern.matcher(input);
-		while (matcher.find()) {
-			try {
-				seriesEpisode = matcher.group();
-				nSeason = Integer.parseInt(seriesEpisode.substring(1, 3));
-				nEpisode = Integer.parseInt(seriesEpisode.substring(4));
-				SxxExx = true;
-			} catch (Exception e) {
-				Email.Send("t.s.partanen@gmail.com", "HÄLYTYS", "TVSeriesFollower ei osannut parsea seasonia/episodia (SxxExx) ja on sammutettu.");
-				System.exit(0);
+	private static Series infoFromMagnet (String magnet, ArrayList<Series> series) throws AddressException, MessagingException {
+		boolean gotName = false;
+		Series serie = new Series();
+		int i;
+		
+		//Serie name from magnet. Might as well check the resolution
+		for (i = 0; i < series.size(); i++) {
+			if (magnet.toLowerCase().replace("%20", "").replace(".", "").contains(series.get(i).getName().toLowerCase().replace(" ", "").replace(".", "")) 
+					&& (magnet.toLowerCase().contains("720p") || magnet.toLowerCase().contains("1080p"))) {
+				serie.setName(series.get(i).getName());
+				serie.setSubtitles(series.get(i).getSubtitles());
+				gotName = true;
+				break;
 			}
 		}
-		if (SxxExx==false) {
-			pattern = Pattern.compile("\\d[x]\\d{2}");
-			matcher = pattern.matcher(input);
+		
+		//If a name in magnet matched one from database we have a reason to continue
+		if (gotName==true) {
+			int nSeason = -1;
+			int nEpisode = -1;
+			boolean SxxExx = false;
+			Pattern pattern = Pattern.compile("[S]\\d{2}[E]\\d{2}");
+			Matcher matcher = pattern.matcher(magnet);
 			while (matcher.find()) {
 				try {
 					seriesEpisode = matcher.group();
-					nSeason = Integer.parseInt(seriesEpisode.substring(0, seriesEpisode.indexOf("x")));
-					nEpisode = Integer.parseInt(seriesEpisode.substring(seriesEpisode.indexOf("x")+1));
+					nSeason = Integer.parseInt(seriesEpisode.substring(1, 3));
+					nEpisode = Integer.parseInt(seriesEpisode.substring(4));
+					SxxExx = true;
 				} catch (Exception e) {
-					Email.Send("t.s.partanen@gmail.com", "HÄLYTYS", "TVSeriesFollower ei osannut parsea seasonia/episodia (SSxEE) ja on sammutettu.");
+					Email.send("t.s.partanen@gmail.com", "HÄLYTYS", "TVSeriesFollower ei osannut parsea seasonia/episodia (SxxExx) ja on sammutettu.");
 					System.exit(0);
 				}
 			}
+			if (SxxExx==false) {
+				pattern = Pattern.compile("\\d[x]\\d{,2}");
+				matcher = pattern.matcher(magnet);
+				while (matcher.find()) {
+					try {
+						seriesEpisode = matcher.group();
+						nSeason = Integer.parseInt(seriesEpisode.substring(0, seriesEpisode.indexOf("x")));
+						nEpisode = Integer.parseInt(seriesEpisode.substring(seriesEpisode.indexOf("x")+1));
+					} catch (Exception e) {
+						Email.send("t.s.partanen@gmail.com", "HÄLYTYS", "TVSeriesFollower ei osannut parsea seasonia/episodia (SSxEE) ja on sammutettu.");
+						System.exit(0);
+					}
+				}
+			}
+			serie.setLatestSeason(nSeason);
+			serie.setLatestEpisode(nEpisode);
+			
+			//Check if identified episode is new
+			if (isThisNew(serie, series.get(i))==true) {
+				return serie;
+			} else {
+				return null;
+			}
+		} else {
+			return null;
 		}
-		serie = new Series(nSeason, nEpisode);
-		return serie;
 	}
 	
 	/**
 	 * Compares url or magnet to current information from database and checks if given url or magnet contains new episode
+	 * @param series 
 	 * @param input html-substring or magnet that potentially contains new episode of a wanted serie
 	 * @param series Serie name and known latest season and episode from database
 	 * @return
 	 */
-	private static boolean isThisNew(String input, Series series) {
-		input = input.replace(" ", "");
-		input = input.replace(".", "");
-		if (input.toLowerCase().contains(series.getName().toLowerCase().replace(" ", "")) 
-				&& (input.contains("720p") || input.contains("1080p")) 
-				&& (series.getLatestSeason()<nSeason || (series.getLatestSeason()==nSeason && series.getLatestEpisode()<nEpisode))) {
-			emailTitle = "New episode of " + series.getName() + " released";
+	private static boolean isThisNew(Series newRelease, Series dbInfo) {
+		if (dbInfo.getLatestSeason()<newRelease.getLatestSeason() || (dbInfo.getLatestSeason()==dbInfo.getLatestSeason() && dbInfo.getLatestEpisode()<newRelease.getLatestEpisode())) {
+			emailTitle = "New episode of " + newRelease.getName() + " released";
 			return true;
+		} else {
+			return false;
 		}
-		return false;
 	}
 	
 	/**
@@ -215,7 +230,7 @@ public class Handler {
 			lause.setString(3, serie.getName());
 			lause.executeUpdate();
 		} catch (Exception e) {
-			Email.Send("t.s.partanen@gmail.com", "HÄLYTYS", "TVSeriesFollower ei voinut päivittää tietokantaansa ja on sammutettu");
+			Email.send("t.s.partanen@gmail.com", "HÄLYTYS", "TVSeriesFollower ei voinut päivittää tietokantaansa ja on sammutettu");
 			closeConnection();
 			System.exit(0);
 		}

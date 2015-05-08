@@ -31,7 +31,7 @@ public class Tvseriesfollower {
     	try {
     		thread();
 		} catch (Throwable e) {
-			Email.UnkownCrash(e);
+			Email.unknownCrash(e);
 			System.exit(0);
 		}
     	
@@ -63,7 +63,7 @@ public class Tvseriesfollower {
 				errors = errors+1;
 				if (errors==100) {
 					long difference = TimeUnit.MILLISECONDS.toHours(new Date().getTime() - lasterrordate.getTime());
-					Email.Error(errors, lasterrordate, difference);
+					Email.error(errors, lasterrordate, difference);
 					lasterrordate = new Date();
 					errors=0;
 				}
