@@ -1,12 +1,12 @@
 package tvseriesfollower;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
+//import java.io.BufferedReader;
+//import java.io.InputStreamReader;
+//import java.net.HttpURLConnection;
+//import java.net.URL;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Date;
+//import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
@@ -31,6 +31,7 @@ public class Tvseriesfollower {
     	try {
     		thread();
 		} catch (Throwable e) {
+			e.printStackTrace();
 			Email.unknownCrash(e);
 			System.exit(0);
 		}
@@ -38,17 +39,17 @@ public class Tvseriesfollower {
     }
 
 	private static void thread() throws AddressException, MessagingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException, InterruptedException {
-		int errors = 0;
+	/*	int errors = 0;
 		Date lasterrordate = new Date();
 		String generate_URL;
 		ArrayList<String> magnets = new ArrayList<String>();
 		String inputLine;
-		String all="";
+		String all=""; */
 
 
 		while (true) {
 			//EZTV
-			try {
+		/*	try {
 				generate_URL = "https://eztv.ch/sort/50/";
 				URL data = new URL(generate_URL);
 				HttpURLConnection con = (HttpURLConnection) data.openConnection();
@@ -76,7 +77,7 @@ public class Tvseriesfollower {
 			Handler.check(magnets);
 			magnets.clear();
 			all = "";
-			inputLine = "";
+			inputLine = ""; */
 			
 			//STRIKE, looking for new episode
 			ArrayList<Series> newEpisode = Handler.getNewEpisodeForSeries();

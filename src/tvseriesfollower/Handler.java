@@ -14,12 +14,11 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 public class Handler {
-	private static String dbURL = "jdbc:derby:C:/Users/Teemu/MyDB";
+	private static String dbURL = "jdbc:derby://localhost:1527/MyDB";
     private static Connection conn = null;
-    private static Statement statement = null;
+    private static PreparedStatement statement = null;
     private static ArrayList<String> followers;
     private static String emailMessage;
     private static String emailTitle;
@@ -55,6 +54,7 @@ public class Handler {
 				}
 			}
 		} catch (Throwable e) {
+			e.printStackTrace();
 			Email.knownCrash(e, "EZTV");
 			System.exit(0);
 		}
@@ -82,6 +82,7 @@ public class Handler {
 					Email.massMail(followers, emailTitle, emailMessage);
 					break;
 				} catch (Throwable e) {
+					e.printStackTrace();
 					Email.knownCrash(e, "Strike");
 					System.exit(0);
 				}
@@ -127,6 +128,7 @@ public class Handler {
 					nEpisode = Integer.parseInt(seriesEpisode.substring(4));
 					SxxExx = true;
 				} catch (Exception e) {
+					e.printStackTrace();
 					Email.send("t.s.partanen@gmail.com", "HÄLYTYS", "TVSeriesFollower ei osannut parsea seasonia/episodia (SxxExx) ja on sammutettu.");
 					System.exit(0);
 				}
@@ -222,14 +224,14 @@ public class Handler {
 	private static void setEpisode(Series serie) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException, AddressException, MessagingException {
 		try {
 			openConnection();
-			statement = conn.createStatement();
 			String sql = "update TVSeriesFollower.Series set latest_season = ?, latest_episode = ? WHERE name = ?";
-			PreparedStatement lause = conn.prepareStatement(sql);
-			lause.setInt(1, serie.getLatestSeason());
-			lause.setInt(2, serie.getLatestEpisode());
-			lause.setString(3, serie.getName());
-			lause.executeUpdate();
+			statement = conn.prepareStatement(sql);
+			statement.setInt(1, serie.getLatestSeason());
+			statement.setInt(2, serie.getLatestEpisode());
+			statement.setString(3, serie.getName());
+			statement.executeUpdate();
 		} catch (Exception e) {
+			e.printStackTrace();
 			Email.send("t.s.partanen@gmail.com", "HÄLYTYS", "TVSeriesFollower ei voinut päivittää tietokantaansa ja on sammutettu");
 			closeConnection();
 			System.exit(0);
@@ -249,22 +251,22 @@ public class Handler {
 	 */
 	public static ArrayList<Series> getSeries() throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
 		ArrayList<Series> series = new ArrayList<Series>();
-		openConnection();
-		 try
-	        {
-	            statement = conn.createStatement();
-	            ResultSet results = statement.executeQuery("select * from TVSeriesFollower.Series");
-	            while (results.next()) {
-					String name = results.getString("name");
-					int season = results.getInt("latest_season");
-					int episode = results.getInt("latest_episode");
-					String subtitles = results.getString("subtitles");
-					Series s = new Series(name, season, episode, subtitles);
-					series.add(s);
-				}
-	        }
-	        catch (SQLException sqlExcept)
-	        {
+		try {
+			openConnection();
+			String sql = "select * from TVSeriesFollower.Series";
+            statement = conn.prepareStatement(sql);
+            ResultSet results = statement.executeQuery();
+            while (results.next()) {
+				String name = results.getString("name");
+				int season = results.getInt("latest_season");
+				int episode = results.getInt("latest_episode");
+				String subtitles = results.getString("subtitles");
+				Series s = new Series(name, season, episode, subtitles);
+				series.add(s);
+			}
+		}
+	        catch (SQLException sqlExcept) {
+	        	sqlExcept.printStackTrace();
 	        }
 		 finally {
 			 closeConnection();
@@ -283,18 +285,19 @@ public class Handler {
 	 */
 	private static ArrayList<String> getFollowersforSeries(String followedSeries) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
 		ArrayList<String> followers = new ArrayList<String>();
-		openConnection();
-		try
-        {
-            statement = conn.createStatement();
-            ResultSet results = statement.executeQuery("select address from TVSeriesFollower.Usersseries WHERE name = '" + followedSeries + "'");
-            while (results.next()) {
+		try {
+			openConnection();
+			String sql = "select address from TVSeriesFollower.Usersseries WHERE name = ?";
+			statement = conn.prepareStatement(sql);
+			statement.setString(1, followedSeries);
+			ResultSet results = statement.executeQuery();
+			while (results.next()) {
 				String address = results.getString("address");
 				followers.add(address);
 			}
-        }
-        catch (SQLException sqlExcept)
-        {
+		}
+        catch (SQLException sqlExcept) {
+        	sqlExcept.printStackTrace();
         }
 	 finally {
 		 closeConnection();
@@ -310,7 +313,7 @@ public class Handler {
 	 * @throws ClassNotFoundException
 	 */
 	private static void openConnection() throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
-		Class.forName("org.apache.derby.jdbc.EmbeddedDriver").newInstance();
+		Class.forName("org.apache.derby.jdbc.ClientDriver").newInstance();
 		conn = DriverManager.getConnection(dbURL);
 	}
 	
@@ -321,12 +324,14 @@ public class Handler {
 		try {
 			if (statement != null) {
 				statement.close();
+				statement = null;
 			}
 			if (conn != null) {
-                DriverManager.getConnection(dbURL + ";shutdown=true");
                 conn.close();
+                conn = null;
 			}
 		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 }

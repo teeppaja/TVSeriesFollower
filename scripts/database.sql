@@ -8,6 +8,8 @@ primary key (name)
 
 create TABLE TVSeriesFollower.Users (
 address varchar(50) NOT NULL,
+password varchar(50) NOT NULL,
+salt varchar(50) NOT NULL,
 primary key (address)
 );
 
@@ -20,4 +22,10 @@ foreign key (address) references TVSeriesFollower.Users (address),
 foreign key (name) references TVSeriesFollower.Series (name)
 );
 
-ALTER TABLE TVSeriesFollower.Series ADD COLUMN subtitles varchar(100);
+create TABLE TVSeriesFollower.Verifications (
+verification_id int NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1),
+address varchar(50) NOT NULL,
+verification_code varchar(50) NOT NULL,
+creation_time timestamp NOT NULL,
+primary key (verification_id)
+);
