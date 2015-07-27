@@ -1,13 +1,9 @@
 package tvseriesfollower;
 
 import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
-
-import org.json.JSONObject;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -22,7 +18,6 @@ public class Handler {
     private static ArrayList<String> followers;
     private static String emailMessage;
     private static String emailTitle;
-    private static String seriesEpisode;
 
     /**
      * Checks given list for new episodes of wanted series
@@ -34,7 +29,7 @@ public class Handler {
      * @throws IllegalAccessException
      * @throws ClassNotFoundException
      */
-	public static void check(ArrayList<String> magnets) throws AddressException, 
+/*	public static void check(ArrayList<String> magnets) throws AddressException, 
 	MessagingException, SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
 		ArrayList<Series> series = getSeries();
 		try {
@@ -58,24 +53,20 @@ public class Handler {
 			Email.knownCrash(e, "EZTV");
 			System.exit(0);
 		}
-	}
+	} */
 	
-	public static void checkStrike(ArrayList<JSONObject> jsonObjects, Series serie) throws AddressException, MessagingException {
-		for (int i = 0; i < jsonObjects.size(); i++) {
-			int sseeds = (Integer) jsonObjects.get(i).get("seeds");
-			String title = (String) jsonObjects.get(i).get("torrent_title");
-			title = title.replace(" ", "").replace(",", "").replace(".", "");
-			String category = (String) jsonObjects.get(i).get("torrent_category");
-			if (category.equalsIgnoreCase("TV") && sseeds>2000 && title.toLowerCase().contains(serie.getName().toLowerCase().replace(" ", "")) 
-					&& (title.contains("720p") || title.contains("1080p"))) {
-				String magnet = (String) jsonObjects.get(i).get("magnet_uri");
-				String url = (String) jsonObjects.get(i).get("page");
+	public static void checkTPB(ArrayList<Torrents> torrents, Series serie) throws AddressException, MessagingException {
+		for (int i = 0; i < torrents.size(); i++) {
+			torrents.get(i).setName(torrents.get(i).getName().replace(" ", "").replace(",", "").replace(".", "").toLowerCase());
+			if (torrents.get(i).getSeeds()>=1000 && torrents.get(i).getName().contains(serie.getName().replace(" ", "").toLowerCase()) && 
+					(torrents.get(i).getName().contains("720p") || torrents.get(i).getName().contains("1080p"))) {
 				try {
 					followers = getFollowersforSeries(serie.getName());
 					emailTitle = "New episode of " + serie.getName() + " released";
 					emailMessage = "Hello!<br>New episode " + "of " + serie.getName() + " is out.<br>"
 							+ "You can download the episode by clicking the following link or by copying the magnet URL and adding it manyally to your torrent client:<br>"
-							+ "<a href=\"" + magnet + "\">" + magnet + "</a><br><br>Link to the torrent page: " + "<a href=\"" + url + "\">" + url + "</a><br><br>"
+							+ "<a href=\"" + torrents.get(i).getMagnet() + "\">" + torrents.get(i).getMagnet() + "</a><br><br>Link to the torrent page: " 
+							+ "<a href=\"" + torrents.get(i).getUrl() + "\">" + torrents.get(i).getUrl() + "</a><br><br>"
 							+ "You can find subtitles for this episode from here once they are released:<br>" 
 							+ "<a href=\"" + serie.getSubtitles() + "\">" + serie.getSubtitles() + "</a><br><br><br><i>-TVSeriesFollower</i>";
 					setEpisode(serie);
@@ -83,7 +74,7 @@ public class Handler {
 					break;
 				} catch (Throwable e) {
 					e.printStackTrace();
-					Email.knownCrash(e, "Strike");
+					Email.knownCrash(e, "TPB");
 					System.exit(0);
 				}
 			}
@@ -98,7 +89,7 @@ public class Handler {
 	 * @throws AddressException
 	 * @throws MessagingException
 	 */
-	private static Series infoFromMagnet (String magnet, ArrayList<Series> series) throws AddressException, MessagingException {
+/*	private static Series infoFromMagnet (String magnet, ArrayList<Series> series) throws AddressException, MessagingException {
 		boolean gotName = false;
 		Series serie = new Series();
 		int i;
@@ -159,7 +150,7 @@ public class Handler {
 		} else {
 			return null;
 		}
-	}
+	} */
 	
 	/**
 	 * Compares url or magnet to current information from database and checks if given url or magnet contains new episode
@@ -168,14 +159,14 @@ public class Handler {
 	 * @param series Serie name and known latest season and episode from database
 	 * @return
 	 */
-	private static boolean isThisNew(Series newRelease, Series dbInfo) {
+/*	private static boolean isThisNew(Series newRelease, Series dbInfo) {
 		if (dbInfo.getLatestSeason()<newRelease.getLatestSeason() || (dbInfo.getLatestSeason()==dbInfo.getLatestSeason() && dbInfo.getLatestEpisode()<newRelease.getLatestEpisode())) {
 			emailTitle = "New episode of " + newRelease.getName() + " released";
 			return true;
 		} else {
 			return false;
 		}
-	}
+	} */
 	
 	/**
 	 * Gets series information from database and increases episode number by one. This is used for searching series with new episodes
@@ -334,4 +325,5 @@ public class Handler {
 			e.printStackTrace();
 		}
 	}
+	
 }

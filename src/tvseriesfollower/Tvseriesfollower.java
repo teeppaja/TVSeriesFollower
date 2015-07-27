@@ -1,12 +1,9 @@
 package tvseriesfollower;
 
-//import java.io.BufferedReader;
-//import java.io.InputStreamReader;
-//import java.net.HttpURLConnection;
-//import java.net.URL;
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-//import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
@@ -15,17 +12,13 @@ import java.util.regex.Pattern;
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 
-import org.json.JSONObject;
-
-import com.gargoylesoftware.htmlunit.JavaScriptPage;
+import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.Page;
-import com.gargoylesoftware.htmlunit.TextPage;
-import com.gargoylesoftware.htmlunit.UnexpectedPage;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
-
 public class Tvseriesfollower {
+	private static int server = 0;
 
     public static void main(String[] args) throws AddressException, MessagingException {
     	try {
@@ -38,59 +31,104 @@ public class Tvseriesfollower {
     	
     }
 
-	private static void thread() throws AddressException, MessagingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException, InterruptedException {
-	/*	int errors = 0;
-		Date lasterrordate = new Date();
-		String generate_URL;
-		ArrayList<String> magnets = new ArrayList<String>();
-		String inputLine;
-		String all=""; */
-
-
+	private static void thread() throws AddressException, MessagingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException, InterruptedException, IOException {
 		while (true) {
-			//EZTV
-		/*	try {
-				generate_URL = "https://eztv.ch/sort/50/";
-				URL data = new URL(generate_URL);
-				HttpURLConnection con = (HttpURLConnection) data.openConnection();
-				con.setRequestProperty("User-Agent", "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2");
-				BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-				while ((inputLine = in.readLine()) != null) {
-					all=all + inputLine;
-				}
-				in.close();
-				con.disconnect();
-			} catch (Exception e) {
-				errors = errors+1;
-				if (errors==100) {
-					long difference = TimeUnit.MILLISECONDS.toHours(new Date().getTime() - lasterrordate.getTime());
-					Email.error(errors, lasterrordate, difference);
-					lasterrordate = new Date();
-					errors=0;
-				}
-			}
-			Pattern pattern = Pattern.compile("<a href=\"magnet:(.*?)\" class");
-			Matcher matcher = pattern.matcher(all);
-			while (matcher.find()) {
-				magnets.add("magnet:" + matcher.group(1));
-			}
-			Handler.check(magnets);
-			magnets.clear();
-			all = "";
-			inputLine = ""; */
-			
-			//STRIKE, looking for new episode
+						
+			//TPB, looking for new episode
 			ArrayList<Series> newEpisode = Handler.getNewEpisodeForSeries();
-			newStrikeStuff(newEpisode);
+			newTPBStuff(newEpisode);
 			
-			//STRIKE, looking for new season
+			//TPB, looking for new season
 			ArrayList<Series> newSeason = Handler.getNewSeasonForSeries();
-			newStrikeStuff(newSeason);
+			newTPBStuff(newSeason);
+			
 			TimeUnit.MINUTES.sleep(45);
 		}
 	}
 	
-	private static void newStrikeStuff(ArrayList<Series> newStuff) throws InterruptedException {
+	private static void newTPBStuff(ArrayList<Series> newStuff) throws IOException, AddressException, MessagingException, InterruptedException {
+		for (int i = 0; i < newStuff.size(); i++) {
+			String url = null;
+			String domain = null;
+			ArrayList<Torrents> torrents = new ArrayList<Torrents>();
+			String sSeason = Integer.toString(newStuff.get(i).getLatestSeason());
+			String sEpisode = Integer.toString(newStuff.get(i).getLatestEpisode());
+			if (newStuff.get(i).getLatestSeason()<10) {
+				sSeason = "0"+newStuff.get(i).getLatestSeason();
+			}
+			if (newStuff.get(i).getLatestEpisode()<10) {
+				sEpisode = "0"+newStuff.get(i).getLatestEpisode();
+			}
+			switch (server) {
+			case 0:
+				domain = "https://pirateproxy.sx"; 
+				url = "https://pirateproxy.sx/search/" + newStuff.get(i).getName().toLowerCase() + "%20s" + sSeason + "e" + sEpisode + "/0/99/0";
+				//https://pirateproxy.sx/search/suits%20s05e04/0/99/0
+				break;
+			case 1:
+				domain = "http://tpb.proxyduck.com";
+				url = "http://tpb.proxyduck.com/search.php?q=" + newStuff.get(i).getName().toLowerCase() + "+s" + sSeason + "e" + sEpisode + "&category=0&page=0&orderby=99";
+				//http://tpb.proxyduck.com/search.php?q=suits+s05e04&category=0&page=0&orderby=99
+				break;
+			case 2:
+				domain = "http://thepiratebay.casa";
+				url = "http://thepiratebay.casa/search/" + newStuff.get(i).getName().toLowerCase() + "%20s" + sSeason + "e" + sEpisode + "/0/7/";
+				//http://thepiratebay.casa/search/suits%20s05e04/0/7/
+				break;
+			default:
+				break;
+			}
+			WebClient webClient = new WebClient();
+			java.util.logging.Logger.getLogger("com.gargoylesoftware.htmlunit").setLevel(Level.OFF);
+		    webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
+		    webClient.getOptions().setPrintContentOnFailingStatusCode(false);
+		    webClient.getOptions().setThrowExceptionOnScriptError(false);
+		    webClient.getOptions().setCssEnabled(false);
+		    webClient.getOptions().setJavaScriptEnabled(false);
+		    webClient.getOptions().setGeolocationEnabled(false);
+		    webClient.getOptions().setDoNotTrackEnabled(true);
+		    webClient.getOptions().setPopupBlockerEnabled(true);
+		    webClient.getOptions().setRedirectEnabled(false); 
+			try {
+				webClient.getPage(url);
+			} catch (FailingHttpStatusCodeException | MalformedURLException e) {
+				throw e;
+			}
+		    int status = webClient.getPage(url).getWebResponse().getStatusCode();
+		    if (status>=200 && status<=299) {
+		    	Page page = webClient.getPage(url);
+		    	String pageSource = ((HtmlPage)page).asXml();
+		    	String regex = "<td>.*?<a href=\"(.*?)\" class=\"detLink\" title=\"Details for (.*?)\">.*?(magnet:.*?)\" title=\".*?<td align=\"right\">(.*?)</td>";
+		    	Pattern pattern = Pattern.compile(regex, Pattern.DOTALL);
+		    	Matcher m = pattern.matcher(pageSource);
+				while (m.find()) {
+					try {
+						Torrents torrent = new Torrents();
+						torrent.setUrl(domain + m.group(1).trim());
+						torrent.setName(m.group(2).trim());
+						torrent.setMagnet(m.group(3).trim());
+						torrent.setSeeds((Integer.parseInt(m.group(4).trim())));
+						torrents.add(torrent);
+					} catch (Exception e) {
+						throw e;
+					}
+				}
+				webClient.closeAllWindows();
+				Handler.checkTPB(torrents, newStuff.get(i));
+				TimeUnit.SECONDS.sleep(1);
+			} else {
+				webClient.closeAllWindows();
+				if (server == 2) {
+					server = 0;
+				} else {
+					server++;
+				}
+				i--;
+			}
+		}
+	}
+
+	/* private static void newStrikeStuff(ArrayList<Series> newStuff) throws InterruptedException {
 		for (int i = 0; i < newStuff.size(); i++) {
 			ArrayList<JSONObject> jsonObjects = new ArrayList<JSONObject>();
 			String sSeason = Integer.toString(newStuff.get(i).getLatestSeason());
@@ -137,17 +175,21 @@ public class Tvseriesfollower {
 		    TimeUnit.SECONDS.sleep(1);
 		}
 		
-	}
+	} */
 
-	private static String getPageSource(Page page) {
+	/* private static String getPageSource(Page page) {
 		if(page instanceof HtmlPage) {
+			System.out.println("Xml");
 			return ((HtmlPage)page).asXml();
 		} else if(page instanceof JavaScriptPage) {
+			System.out.println("JavaScript");
 			return ((JavaScriptPage)page).getContent();
 		} else if(page instanceof TextPage) {
+			System.out.println("TextPage");
 			return ((TextPage)page).getContent();
 		} else {
+			System.out.println("None of the above");
 			return ((UnexpectedPage)page).getWebResponse().getContentAsString();
 		}
-	}
+	} */
 }

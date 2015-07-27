@@ -46,7 +46,7 @@ public class Email {
 		e.printStackTrace(pw);
     	final String recipientEmail = "t.s.partanen@gmail.com";
     	final String title = "TVSeriesFollower has crashed";
-    	final String message = "TVSeriesFollower has encountered an unsuspected crash. Stack trace: " + sw.toString();
+    	final String message = "TVSeriesFollower has encountered an unsuspected crash. Stacktrace: " + sw;
         Email.send(recipientEmail, title, message);
 	}
 	
@@ -56,7 +56,7 @@ public class Email {
 		e.printStackTrace(pw);
     	final String recipientEmail = "t.s.partanen@gmail.com";
     	final String title = "Hälytys - " + module;
-    	final String message = "TVSeriesFollower encountered an error while processing " + module + " data and is shut down. Stack trace:" + sw.toString();
+    	final String message = "TVSeriesFollower encountered an error while processing " + module + " data and is shut down. Stacktrace:" + sw;
         Email.send(recipientEmail, title, message);
 	}
     
