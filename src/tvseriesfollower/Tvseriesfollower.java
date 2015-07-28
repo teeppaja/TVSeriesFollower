@@ -13,7 +13,10 @@ import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
+import com.gargoylesoftware.htmlunit.JavaScriptPage;
 import com.gargoylesoftware.htmlunit.Page;
+import com.gargoylesoftware.htmlunit.TextPage;
+import com.gargoylesoftware.htmlunit.UnexpectedPage;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
@@ -41,7 +44,7 @@ public class Tvseriesfollower {
 			//TPB, looking for new season
 			ArrayList<Series> newSeason = Handler.getNewSeasonForSeries();
 			newTPBStuff(newSeason);
-			
+
 			TimeUnit.MINUTES.sleep(45);
 		}
 	}
@@ -88,16 +91,18 @@ public class Tvseriesfollower {
 		    webClient.getOptions().setGeolocationEnabled(false);
 		    webClient.getOptions().setDoNotTrackEnabled(true);
 		    webClient.getOptions().setPopupBlockerEnabled(true);
-		    webClient.getOptions().setRedirectEnabled(false); 
+		    webClient.getOptions().setRedirectEnabled(false);
+		    
 			try {
 				webClient.getPage(url);
 			} catch (FailingHttpStatusCodeException | MalformedURLException e) {
+				webClient.close();
 				throw e;
 			}
 		    int status = webClient.getPage(url).getWebResponse().getStatusCode();
 		    if (status>=200 && status<=299) {
 		    	Page page = webClient.getPage(url);
-		    	String pageSource = ((HtmlPage)page).asXml();
+		    	String pageSource = getPageSource(page);
 		    	String regex = "<td>.*?<a href=\"(.*?)\" class=\"detLink\" title=\"Details for (.*?)\">.*?(magnet:.*?)\" title=\".*?<td align=\"right\">(.*?)</td>";
 		    	Pattern pattern = Pattern.compile(regex, Pattern.DOTALL);
 		    	Matcher m = pattern.matcher(pageSource);
@@ -109,15 +114,17 @@ public class Tvseriesfollower {
 						torrent.setMagnet(m.group(3).trim());
 						torrent.setSeeds((Integer.parseInt(m.group(4).trim())));
 						torrents.add(torrent);
+						System.out.println(torrent);
 					} catch (Exception e) {
+						webClient.close();
 						throw e;
 					}
 				}
-				webClient.closeAllWindows();
+				webClient.close();
 				Handler.checkTPB(torrents, newStuff.get(i));
 				TimeUnit.SECONDS.sleep(1);
 			} else {
-				webClient.closeAllWindows();
+				webClient.close();
 				if (server == 2) {
 					server = 0;
 				} else {
@@ -177,19 +184,15 @@ public class Tvseriesfollower {
 		
 	} */
 
-	/* private static String getPageSource(Page page) {
+	private static String getPageSource(Page page) {
 		if(page instanceof HtmlPage) {
-			System.out.println("Xml");
 			return ((HtmlPage)page).asXml();
 		} else if(page instanceof JavaScriptPage) {
-			System.out.println("JavaScript");
 			return ((JavaScriptPage)page).getContent();
 		} else if(page instanceof TextPage) {
-			System.out.println("TextPage");
 			return ((TextPage)page).getContent();
 		} else {
-			System.out.println("None of the above");
 			return ((UnexpectedPage)page).getWebResponse().getContentAsString();
 		}
-	} */
+	}
 }
