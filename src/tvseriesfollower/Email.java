@@ -34,7 +34,7 @@ public class Email {
      * @throws MessagingException if the connection is dead or not in the connected state or if the message is not a MimeMessage
      */
     
-	public static void massMail(ArrayList<String> followers, String emailTitle, String emailMessage) throws AddressException, MessagingException {
+	static void massMail(ArrayList<String> followers, String emailTitle, String emailMessage) throws AddressException, MessagingException {
 		for (int z = 0; z < followers.size(); z++) {
 			Email.send(followers.get(z), emailTitle, emailMessage);
 		}

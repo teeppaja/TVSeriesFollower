@@ -16,6 +16,7 @@ import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.JavaScriptPage;
 import com.gargoylesoftware.htmlunit.Page;
 import com.gargoylesoftware.htmlunit.TextPage;
+import com.gargoylesoftware.htmlunit.ThreadedRefreshHandler;
 import com.gargoylesoftware.htmlunit.UnexpectedPage;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
@@ -82,6 +83,7 @@ public class Tvseriesfollower {
 				break;
 			}
 			WebClient webClient = new WebClient();
+			webClient.setRefreshHandler(new ThreadedRefreshHandler());
 			java.util.logging.Logger.getLogger("com.gargoylesoftware.htmlunit").setLevel(Level.OFF);
 		    webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
 		    webClient.getOptions().setPrintContentOnFailingStatusCode(false);
@@ -114,7 +116,6 @@ public class Tvseriesfollower {
 						torrent.setMagnet(m.group(3).trim());
 						torrent.setSeeds((Integer.parseInt(m.group(4).trim())));
 						torrents.add(torrent);
-						System.out.println(torrent);
 					} catch (Exception e) {
 						webClient.close();
 						throw e;
