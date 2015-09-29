@@ -1,6 +1,7 @@
 package tvseriesfollower;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
@@ -18,6 +19,7 @@ public class Handler {
     private static ArrayList<String> followers;
     private static String emailMessage;
     private static String emailTitle;
+    
 
     /**
      * Checks given list for new episodes of wanted series
@@ -58,8 +60,9 @@ public class Handler {
 	public static void checkTPB(ArrayList<Torrents> torrents, Series serie) throws AddressException, MessagingException {
 		for (int i = 0; i < torrents.size(); i++) {
 			torrents.get(i).setName(torrents.get(i).getName().replace(" ", "").replace(",", "").replace(".", "").toLowerCase());
-			if (torrents.get(i).getSeeds()>=1000 && torrents.get(i).getName().contains(serie.getName().replace(" ", "").toLowerCase()) && 
-					(torrents.get(i).getName().contains("720p") || torrents.get(i).getName().contains("1080p"))) {
+			if (torrents.get(i).getName().contains(serie.getName().replace(" ", "").toLowerCase()) && 
+					(torrents.get(i).getName().contains("720p") || torrents.get(i).getName().contains("1080p")) && 
+					(torrents.get(i).getSeeds()>=200 || Arrays.asList("EtHD", "TvTeam", "ettv", "DibyaTPB", "frostyon420").contains(torrents.get(i).getUploader()))) {
 				try {
 					followers = getFollowersforSeries(serie.getName());
 					emailTitle = "New episode of " + serie.getName() + " released";
@@ -74,7 +77,7 @@ public class Handler {
 					break;
 				} catch (Throwable e) {
 					e.printStackTrace();
-					Email.knownCrash(e, "TPB");
+					Email.unknownCrash(e);
 					System.exit(0);
 				}
 			}

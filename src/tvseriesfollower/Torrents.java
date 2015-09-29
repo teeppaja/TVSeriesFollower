@@ -1,7 +1,7 @@
 package tvseriesfollower;
 
 public class Torrents {
-	String url, name, magnet;
+	String url, name, magnet, uploader;
 	int seeds;
 	
 	public Torrents() {
@@ -9,11 +9,12 @@ public class Torrents {
 		// TODO Auto-generated constructor stub
 	}
 
-	public Torrents(String url, String name, String magnet, int seeds) {
+	public Torrents(String url, String name, String magnet, String uploader, int seeds) {
 		super();
 		this.url = url;
 		this.name = name;
 		this.magnet = magnet;
+		this.uploader = uploader;
 		this.seeds = seeds;
 	}
 
@@ -41,6 +42,14 @@ public class Torrents {
 		this.magnet = magnet;
 	}
 
+	public String getUploader() {
+		return uploader;
+	}
+
+	public void setUploader(String uploader) {
+		this.uploader = uploader;
+	}
+
 	public int getSeeds() {
 		return seeds;
 	}
@@ -52,7 +61,7 @@ public class Torrents {
 	@Override
 	public String toString() {
 		return "Torrents [url=" + url + ", name=" + name + ", magnet=" + magnet
-				+ ", seeds=" + seeds + "]";
+				+ ", uploader=" + uploader + ", seeds=" + seeds + "]";
 	}
 	
 }

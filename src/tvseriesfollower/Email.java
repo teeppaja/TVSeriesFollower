@@ -50,13 +50,13 @@ public class Email {
         Email.send(recipientEmail, title, message);
 	}
 	
-	public static void knownCrash(Throwable e, String module) throws AddressException, MessagingException {
+	public static void knownCrash(Throwable e) throws AddressException, MessagingException {
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = new PrintWriter(sw);
 		e.printStackTrace(pw);
     	final String recipientEmail = "t.s.partanen@gmail.com";
-    	final String title = "Hälytys - " + module;
-    	final String message = "TVSeriesFollower encountered an error while processing " + module + " data and is shut down. Stacktrace:" + sw;
+    	final String title = "Hälytys - Virhe";
+    	final String message = "TVSeriesFollower encountered an error while processing a web page. It should still be running. Stacktrace:" + sw;
         Email.send(recipientEmail, title, message);
 	}
     

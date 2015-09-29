@@ -2,6 +2,8 @@ package tvseriesfollower;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
@@ -37,7 +39,15 @@ public class Tvseriesfollower {
 
 	private static void thread() throws AddressException, MessagingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException, InterruptedException, IOException {
 		while (true) {
-						
+			
+	/*		//RARBG, looking for new episode
+			ArrayList<Series> newEpisode = Handler.getNewEpisodeForSeries();
+			newRARStuff(newEpisode);
+			
+			//RARBG, looking for new season
+			ArrayList<Series> newSeason = Handler.getNewSeasonForSeries();
+			newRARStuff(newSeason);	*/
+			
 			//TPB, looking for new episode
 			ArrayList<Series> newEpisode = Handler.getNewEpisodeForSeries();
 			newTPBStuff(newEpisode);
@@ -50,6 +60,89 @@ public class Tvseriesfollower {
 		}
 	}
 	
+/*	private static void newRARStuff(ArrayList<Series> newStuff) throws IOException, AddressException, MessagingException, InterruptedException {
+		for (int i = 0; i < newStuff.size(); i++) {
+			TimeUnit.MILLISECONDS.sleep(1);
+			String urlprefix = "https://rarbgunblock.com/torrents.php?category=41&search=";
+			ArrayList<Torrents> torrents = new ArrayList<Torrents>();
+			String sSeason = Integer.toString(newStuff.get(i).getLatestSeason());
+			String sEpisode = Integer.toString(newStuff.get(i).getLatestEpisode());
+			if (newStuff.get(i).getLatestSeason()<10) {
+				sSeason = "0"+newStuff.get(i).getLatestSeason();
+			}
+			if (newStuff.get(i).getLatestEpisode()<10) {
+				sEpisode = "0"+newStuff.get(i).getLatestEpisode();
+			}
+			String sSerieEpisode = "s" + sSeason + "e" + sEpisode;
+			
+			WebClient webClient = new WebClient(BrowserVersion.INTERNET_EXPLORER_8);
+			webClient.getBrowserVersion().setUserAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:38.0) Gecko/20100101 Firefox/38.1.0 Waterfox/38.1.0");
+			//webClient.setRefreshHandler(new ThreadedRefreshHandler());
+			java.util.logging.Logger.getLogger("com.gargoylesoftware.htmlunit").setLevel(Level.OFF);
+		    webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
+		    webClient.getOptions().setPrintContentOnFailingStatusCode(false);
+		    webClient.getOptions().setThrowExceptionOnScriptError(false);
+		    webClient.getOptions().setCssEnabled(true);
+		    webClient.getOptions().setJavaScriptEnabled(true);
+		    webClient.getOptions().setGeolocationEnabled(true);
+		    webClient.getOptions().setDoNotTrackEnabled(false);
+		    webClient.getOptions().setPopupBlockerEnabled(true);
+		    webClient.getOptions().setRedirectEnabled(true);
+		    
+			try {
+				String url = urlprefix + newStuff.get(i).getName().replace(" ", "+") + "+" + sSerieEpisode + "&order=data&by=ASC";
+				System.out.println(url);
+				System.out.println(webClient.getBrowserVersion().getUserAgent());
+				webClient.getPage(url);
+			    int status = webClient.getPage(url).getWebResponse().getStatusCode();
+			    if (status>=200 && status<=299) {
+			    	Page page = webClient.getPage(url);
+			    	String pageSource = getPageSource(page);
+			    	System.out.println(pageSource);
+			    	String regex = "<tr class=\"lista2\">.*?onmouseout=\"return nd();\" href=\"(.*?)\" title=\"(.*?)\">.*?</tr>";
+			    	Pattern pattern = Pattern.compile(regex, Pattern.DOTALL);
+			    	Matcher m = pattern.matcher(pageSource);
+					while (m.find()) {
+						System.out.println(m.group(1));
+						System.out.println(m.group(2));
+						System.out.println(m.group(3));
+						try {
+							Torrents torrent = new Torrents();
+							torrent.setUrl(domain + m.group(1).trim());
+							torrent.setName(m.group(2).trim());
+							torrent.setMagnet(m.group(3).trim());
+							torrent.setSeeds((Integer.parseInt(m.group(4).trim())));
+							torrents.add(torrent);
+						} catch (Exception e) {
+							webClient.close();
+							throw e;
+						} 
+					}
+					webClient.close();
+					Handler.checkTPB(torrents, newStuff.get(i)); 
+					TimeUnit.SECONDS.sleep(1);
+				} else {
+					webClient.close();
+					if (server == 2) {
+						server = 0;
+					} else {
+						server++;
+					}
+					i--;
+				}
+			} catch (MalformedURLException e) {
+				webClient.close();
+				throw e;
+			} catch (FailingHttpStatusCodeException | UnknownHostException | SocketTimeoutException e) {
+				//i--;
+				//Email.knownCrash(e);
+				//continue;
+			}
+
+		}
+		
+	} */
+
 	private static void newTPBStuff(ArrayList<Series> newStuff) throws IOException, AddressException, MessagingException, InterruptedException {
 		for (int i = 0; i < newStuff.size(); i++) {
 			String url = null;
@@ -97,34 +190,43 @@ public class Tvseriesfollower {
 		    
 			try {
 				webClient.getPage(url);
-			} catch (FailingHttpStatusCodeException | MalformedURLException e) {
+			    int status = webClient.getPage(url).getWebResponse().getStatusCode();
+			    if (status>=200 && status<=299) {
+			    	Page page = webClient.getPage(url);
+			    	String pageSource = getPageSource(page);
+			    	String regex = "<td>.*?<a href=\"(.*?)\" class=\"detLink\" title=\"Details for (.*?)\">.*?(magnet:.*?)\" title=\".*?title=\"Browse (.*?)\">.*?<td align=\"right\">(.*?)</td>";
+			    	Pattern pattern = Pattern.compile(regex, Pattern.DOTALL);
+			    	Matcher m = pattern.matcher(pageSource);
+					while (m.find()) {
+						try {
+							Torrents torrent = new Torrents();
+							torrent.setUrl(domain + m.group(1).trim());
+							torrent.setName(m.group(2).trim());
+							torrent.setMagnet(m.group(3).trim());
+							torrent.setUploader(m.group(4).trim());
+							torrent.setSeeds((Integer.parseInt(m.group(5).trim())));
+							torrents.add(torrent);
+						} catch (Exception e) {
+							webClient.close();
+							throw e;
+						}
+					}
+					webClient.close();
+					Handler.checkTPB(torrents, newStuff.get(i));
+					TimeUnit.SECONDS.sleep(1);
+				} else {
+					webClient.close();
+					if (server == 2) {
+						server = 0;
+					} else {
+						server++;
+					}
+					i--;
+				}
+			} catch (MalformedURLException e) {
 				webClient.close();
 				throw e;
-			}
-		    int status = webClient.getPage(url).getWebResponse().getStatusCode();
-		    if (status>=200 && status<=299) {
-		    	Page page = webClient.getPage(url);
-		    	String pageSource = getPageSource(page);
-		    	String regex = "<td>.*?<a href=\"(.*?)\" class=\"detLink\" title=\"Details for (.*?)\">.*?(magnet:.*?)\" title=\".*?<td align=\"right\">(.*?)</td>";
-		    	Pattern pattern = Pattern.compile(regex, Pattern.DOTALL);
-		    	Matcher m = pattern.matcher(pageSource);
-				while (m.find()) {
-					try {
-						Torrents torrent = new Torrents();
-						torrent.setUrl(domain + m.group(1).trim());
-						torrent.setName(m.group(2).trim());
-						torrent.setMagnet(m.group(3).trim());
-						torrent.setSeeds((Integer.parseInt(m.group(4).trim())));
-						torrents.add(torrent);
-					} catch (Exception e) {
-						webClient.close();
-						throw e;
-					}
-				}
-				webClient.close();
-				Handler.checkTPB(torrents, newStuff.get(i));
-				TimeUnit.SECONDS.sleep(1);
-			} else {
+			} catch (FailingHttpStatusCodeException | UnknownHostException | SocketTimeoutException e) {
 				webClient.close();
 				if (server == 2) {
 					server = 0;
@@ -132,7 +234,10 @@ public class Tvseriesfollower {
 					server++;
 				}
 				i--;
+				Email.knownCrash(e);
+				continue;
 			}
+
 		}
 	}
 
