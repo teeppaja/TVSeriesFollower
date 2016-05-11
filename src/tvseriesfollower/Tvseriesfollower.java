@@ -68,7 +68,7 @@ public class Tvseriesfollower {
 			
 			switch (server) {
 			case 0:
-				domain = "https://tpb.immunicity.info";
+				domain = "https://thepiratebay.immunicity.eu";
 				url = domain + "/search/" + newStuff.get(i).getName().toLowerCase() + "%20s" + sSeason + "e" + sEpisode + "/0/99/0";
 				//https://tpb.immunicity.info/search/suits%20s05e15/0/99/0
 				break;
@@ -102,7 +102,6 @@ public class Tvseriesfollower {
 			try {
 				webClient.getPage(url);
 			    int status = webClient.getPage(url).getWebResponse().getStatusCode();
-			    System.out.println(status);
 			    if (status>=200 && status<=299) {
 			    	Page page = webClient.getPage(url);
 			    	String pageSource = getPageSource(page);
@@ -138,7 +137,17 @@ public class Tvseriesfollower {
 			} catch (MalformedURLException e) {
 				webClient.close();
 				throw e;
-			} catch (FailingHttpStatusCodeException | UnknownHostException | SocketTimeoutException e) {
+			} catch (SocketTimeoutException e) {
+				webClient.close();
+				if (server == 2) {
+					server = 0;
+				} else {
+					server++;
+				}
+				i--;
+				continue;
+			}
+			catch (FailingHttpStatusCodeException | UnknownHostException e) {
 				webClient.close();
 				if (server == 2) {
 					server = 0;

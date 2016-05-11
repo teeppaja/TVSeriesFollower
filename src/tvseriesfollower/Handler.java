@@ -25,7 +25,7 @@ public class Handler {
 			torrents.get(i).setName(torrents.get(i).getName().replace(" ", "").replace(",", "").replace(".", "").toLowerCase());
 			if (torrents.get(i).getName().contains(serie.getName().replace(" ", "").toLowerCase()) && 
 					(torrents.get(i).getName().contains("720p") || torrents.get(i).getName().contains("1080p")) && 
-					(torrents.get(i).getSeeds()>=200 || Arrays.asList("EtHD", "TvTeam", "ettv", "DibyaTPB").contains(torrents.get(i).getUploader()))) {
+					(torrents.get(i).getSeeds()>=500 || Arrays.asList("EtHD", "TvTeam", "ettv", "DibyaTPB", "TheRedPill").contains(torrents.get(i).getUploader()))) {
 				try {
 					followers = getFollowersforSeries(serie.getName());
 					emailTitle = "New episode of " + serie.getName() + " released";
