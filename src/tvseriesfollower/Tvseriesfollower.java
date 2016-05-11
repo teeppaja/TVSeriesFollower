@@ -87,7 +87,6 @@ public class Tvseriesfollower {
 			}
 			
 			WebClient webClient = new WebClient();
-			webClient.setRefreshHandler(new ThreadedRefreshHandler());
 			java.util.logging.Logger.getLogger("com.gargoylesoftware.htmlunit").setLevel(Level.OFF);
 			webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
 		    webClient.getOptions().setPrintContentOnFailingStatusCode(false);
@@ -98,13 +97,14 @@ public class Tvseriesfollower {
 		    webClient.getOptions().setDoNotTrackEnabled(true);
 		    webClient.getOptions().setPopupBlockerEnabled(true);
 		    webClient.getOptions().setRedirectEnabled(false);
+			webClient.setRefreshHandler(new ThreadedRefreshHandler());
 		    
 			try {
 				webClient.getPage(url);
 			    int status = webClient.getPage(url).getWebResponse().getStatusCode();
 			    if (status>=200 && status<=299) {
-			    	Page page = webClient.getPage(url);
-			    	String pageSource = getPageSource(page);
+			    	String pageSource = getPageSource(webClient.getPage(url));
+			    	webClient.close();
 			    	String regex = "<td>.*?<a href=\"(.*?)\" class=\"detLink\" title=\"Details for (.*?)\">.*?(magnet:.*?)\" title=\".*?title=\"Browse (.*?)\">.*?<td align=\"right\">(.*?)</td>";
 			    	Pattern pattern = Pattern.compile(regex, Pattern.DOTALL);
 			    	Matcher m = pattern.matcher(pageSource);
@@ -122,11 +122,9 @@ public class Tvseriesfollower {
 							throw e;
 						}
 					}
-					webClient.close();
 					Handler.checkTPB(torrents, newStuff.get(i));
 					TimeUnit.SECONDS.sleep(1);
 				} else {
-					webClient.close();
 					if (server == 2) {
 						server = 0;
 					} else {
