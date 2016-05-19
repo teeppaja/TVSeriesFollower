@@ -6,7 +6,6 @@ public class Torrents {
 	
 	public Torrents() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
 
 	public Torrents(String url, String name, String magnet, String uploader, int seeds) {

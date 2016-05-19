@@ -14,6 +14,8 @@ import java.util.regex.Pattern;
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 
+import org.apache.http.conn.HttpHostConnectException;
+
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.JavaScriptPage;
 import com.gargoylesoftware.htmlunit.Page;
@@ -24,7 +26,7 @@ import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 public class Tvseriesfollower {
-	private static int server = 0;
+	// private static int server = 0;
 
     public static void main(String[] args) throws AddressException, MessagingException {
     	try {
@@ -40,19 +42,19 @@ public class Tvseriesfollower {
 	private static void thread() throws AddressException, MessagingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException, InterruptedException, IOException {
 		while (true) {
 			
-			//TPB, looking for new episode
+			//looking for new episode
 			ArrayList<Series> newEpisode = Handler.getNewEpisodeForSeries();
-			newTPBStuff(newEpisode);
+			newStuff(newEpisode);
 			
-			//TPB, looking for new season
+			//looking for new season
 			ArrayList<Series> newSeason = Handler.getNewSeasonForSeries();
-			newTPBStuff(newSeason);
+			newStuff(newSeason);
 
 			TimeUnit.MINUTES.sleep(45);
 		}
 	}
 
-	private static void newTPBStuff(ArrayList<Series> newStuff) throws IOException, AddressException, MessagingException, InterruptedException {
+	private static void newStuff(ArrayList<Series> newStuff) throws IOException, AddressException, MessagingException, InterruptedException {
 		for (int i = 0; i < newStuff.size(); i++) {
 			String url = null;
 			String domain = null;
@@ -66,25 +68,28 @@ public class Tvseriesfollower {
 				sEpisode = "0"+newStuff.get(i).getLatestEpisode();
 			}
 			
-			switch (server) {
-			case 0:
-				domain = "https://thepiratebay.immunicity.eu";
-				url = domain + "/search/" + newStuff.get(i).getName().toLowerCase() + "%20s" + sSeason + "e" + sEpisode + "/0/99/0";
-				//https://tpb.immunicity.info/search/suits%20s05e15/0/99/0
-				break;
-			case 1:
-				domain = "http://tpb.proxyduck.com";
-				url = domain + "/search.php?q=" + newStuff.get(i).getName().toLowerCase() + "+s" + sSeason + "e" + sEpisode + "&category=0&page=0&orderby=99";
-				//http://tpb.proxyduck.com/search.php?q=suits+s05e15&category=0&page=0&orderby=99
-				break;
-			case 2:
-				domain = "https://pirateproxy.pw"; 
-				url = domain + "/search/" + newStuff.get(i).getName().toLowerCase() + "%20s" + sSeason + "e" + sEpisode + "/0/99/0";
-				//https://pirateproxy.pw/search/suits%20s05e15/0/99/0
-				break;
-			default:
-				break;
-			}
+			domain = "https://kat.cr";
+			url = domain + "/usearch/" + newStuff.get(i).getName().toLowerCase().replaceAll("\\s", "%20") + "%20s" + sSeason + "e" + sEpisode + "%20" + "category:tv/";
+			
+			/* switch (server) {
+				case 0:
+					domain = "https://thepiratebay.immunicity.eu";
+					url = domain + "/search/" + newStuff.get(i).getName().toLowerCase() + "%20s" + sSeason + "e" + sEpisode + "/0/99/0";
+					//https://thepiratebay.immunicity.eu/search/suits%20s05e15/0/99/0
+					break;
+				case 1:
+					domain = "http://tpb.proxyduck.com";
+					url = domain + "/search.php?q=" + newStuff.get(i).getName().toLowerCase() + "+s" + sSeason + "e" + sEpisode + "&category=0&page=0&orderby=99";
+					//http://tpb.proxyduck.com/search.php?q=suits+s05e15&category=0&page=0&orderby=99
+					break;
+				case 2:
+					domain = "https://pirateproxy.pw"; 
+					url = domain + "/search/" + newStuff.get(i).getName().toLowerCase() + "%20s" + sSeason + "e" + sEpisode + "/0/99/0";
+					//https://pirateproxy.pw/search/suits%20s05e15/0/99/0
+					break;
+				default:
+					break;
+			} */
 			
 			WebClient webClient = new WebClient();
 			java.util.logging.Logger.getLogger("com.gargoylesoftware.htmlunit").setLevel(Level.OFF);
@@ -102,17 +107,19 @@ public class Tvseriesfollower {
 			try {
 				webClient.getPage(url);
 			    int status = webClient.getPage(url).getWebResponse().getStatusCode();
+
 			    if (status>=200 && status<=299) {
 			    	String pageSource = getPageSource(webClient.getPage(url));
 			    	webClient.close();
-			    	String regex = "<td>.*?<a href=\"(.*?)\" class=\"detLink\" title=\"Details for (.*?)\">.*?(magnet:.*?)\" title=\".*?title=\"Browse (.*?)\">.*?<td align=\"right\">(.*?)</td>";
+			    	// String regex = "<td>.*?<a href=\"(.*?)\" class=\"detLink\" title=\"Details for (.*?)\">.*?(magnet:.*?)\" title=\".*?title=\"Browse (.*?)\">.*?<td align=\"right\">(.*?)</td>";
+			    	String regex = "<a class=\"icon16\" href=\"(.*?)\" title=\"Verified Torrent\">.*?'name': '(.*?)',.*?'magnet': '(.*?)' .*?href=\"/user/(.*?)/\">.*?<td class=\"green center\">(.*?)</td>";
 			    	Pattern pattern = Pattern.compile(regex, Pattern.DOTALL);
 			    	Matcher m = pattern.matcher(pageSource);
 					while (m.find()) {
 						try {
 							Torrents torrent = new Torrents();
 							torrent.setUrl(domain + m.group(1).trim());
-							torrent.setName(m.group(2).trim());
+							torrent.setName(m.group(2).trim().replaceAll("(%20|,|\\s|\\.)", "").toLowerCase());
 							torrent.setMagnet(m.group(3).trim());
 							torrent.setUploader(m.group(4).trim());
 							torrent.setSeeds((Integer.parseInt(m.group(5).trim())));
@@ -122,36 +129,42 @@ public class Tvseriesfollower {
 							throw e;
 						}
 					}
-					Handler.checkTPB(torrents, newStuff.get(i));
+					
+					Handler.checkResults(torrents, newStuff.get(i));
 					TimeUnit.SECONDS.sleep(1);
+				} else if (status == 404) {
+					webClient.close();
 				} else {
-					if (server == 2) {
+					webClient.close();
+					/* if (server == 2) {
 						server = 0;
 					} else {
 						server++;
-					}
+					} */
 					i--;
 				}
 			} catch (MalformedURLException e) {
 				webClient.close();
 				throw e;
-			} catch (SocketTimeoutException e) {
+			} catch (SocketTimeoutException | HttpHostConnectException e) {
 				webClient.close();
-				if (server == 2) {
+				/* if (server == 2) {
 					server = 0;
 				} else {
 					server++;
-				}
+				} */
 				i--;
+
+				TimeUnit.SECONDS.sleep(120);
 				continue;
 			}
 			catch (FailingHttpStatusCodeException | UnknownHostException e) {
 				webClient.close();
-				if (server == 2) {
+				/* if (server == 2) {
 					server = 0;
 				} else {
 					server++;
-				}
+				} */
 				i--;
 				Email.knownCrash(e);
 				continue;

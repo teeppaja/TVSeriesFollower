@@ -1,7 +1,6 @@
 package tvseriesfollower;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
@@ -20,12 +19,12 @@ public class Handler {
     private static String emailMessage;
     private static String emailTitle;
 	
-	public static void checkTPB(ArrayList<Torrents> torrents, Series serie) throws AddressException, MessagingException {
+	public static void checkResults(ArrayList<Torrents> torrents, Series serie) throws AddressException, MessagingException {
 		for (int i = 0; i < torrents.size(); i++) {
-			torrents.get(i).setName(torrents.get(i).getName().replace(" ", "").replace(",", "").replace(".", "").toLowerCase());
 			if (torrents.get(i).getName().contains(serie.getName().replace(" ", "").toLowerCase()) && 
+					torrents.get(i).getName().contains("s" + serie.getLatestSeason() + "e" + serie.getLatestEpisode()) &&
 					(torrents.get(i).getName().contains("720p") || torrents.get(i).getName().contains("1080p")) && 
-					(torrents.get(i).getSeeds()>=500 || Arrays.asList("EtHD", "TvTeam", "ettv", "DibyaTPB", "TheRedPill").contains(torrents.get(i).getUploader()))) {
+					torrents.get(i).getSeeds()>=200) {
 				try {
 					followers = getFollowersforSeries(serie.getName());
 					emailTitle = "New episode of " + serie.getName() + " released";
