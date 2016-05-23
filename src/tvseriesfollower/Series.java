@@ -5,6 +5,7 @@ public class Series {
 	int latestSeason;
 	int latestEpisode;
 	String subtitles;
+	String sSeaEp;
 	
 	public Series() {
 		super();
@@ -40,6 +41,14 @@ public class Series {
 	public void setName(String name) {
 		this.name = name;
 	}
+	
+	public String getSSeaEp() {
+		return sSeaEp;
+	}
+
+	public void setSSeaEp(String sSeaEp) {
+		this.sSeaEp = sSeaEp;
+	}
 
 	public int getLatestSeason() {
 		return latestSeason;
@@ -69,6 +78,7 @@ public class Series {
 	public String toString() {
 		return "Series [name=" + name + ", latestSeason=" + latestSeason
 				+ ", latestEpisode=" + latestEpisode + ", subtitles="
-				+ subtitles + "]";
+				+ subtitles + ", sSeaEp=" + sSeaEp + "]";
 	}
+
 }

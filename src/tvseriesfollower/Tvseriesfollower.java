@@ -59,18 +59,10 @@ public class Tvseriesfollower {
 			String url = null;
 			String domain = null;
 			ArrayList<Torrents> torrents = new ArrayList<Torrents>();
-			String sSeason = Integer.toString(newStuff.get(i).getLatestSeason());
-			String sEpisode = Integer.toString(newStuff.get(i).getLatestEpisode());
-			if (newStuff.get(i).getLatestSeason()<10) {
-				sSeason = "0"+newStuff.get(i).getLatestSeason();
-			}
-			if (newStuff.get(i).getLatestEpisode()<10) {
-				sEpisode = "0"+newStuff.get(i).getLatestEpisode();
-			}
 			
 			domain = "https://kat.cr";
-			url = domain + "/usearch/" + newStuff.get(i).getName().toLowerCase().replaceAll("\\s", "%20") + "%20s" + sSeason + "e" + sEpisode + "%20" + "category:tv/";
-			
+			url = domain + "/usearch/" + newStuff.get(i).getName().toLowerCase() + " " + newStuff.get(i).getSSeaEp() + " category:tv/";
+
 			/* switch (server) {
 				case 0:
 					domain = "https://thepiratebay.immunicity.eu";

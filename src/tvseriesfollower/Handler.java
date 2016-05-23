@@ -22,9 +22,11 @@ public class Handler {
 	public static void checkResults(ArrayList<Torrents> torrents, Series serie) throws AddressException, MessagingException {
 		for (int i = 0; i < torrents.size(); i++) {
 			if (torrents.get(i).getName().contains(serie.getName().replace(" ", "").toLowerCase()) && 
-					torrents.get(i).getName().contains("s" + serie.getLatestSeason() + "e" + serie.getLatestEpisode()) &&
+					torrents.get(i).getName().contains(serie.getSSeaEp()) &&
 					(torrents.get(i).getName().contains("720p") || torrents.get(i).getName().contains("1080p")) && 
-					torrents.get(i).getSeeds()>=200) {
+					torrents.get(i).getSeeds()>=1000) {
+				System.out.println("Match löytyi: " + torrents.get(i));
+				System.out.println("Mihin matchasi: " + serie);
 				try {
 					followers = getFollowersforSeries(serie.getName());
 					emailTitle = "New episode of " + serie.getName() + " released";
@@ -60,9 +62,10 @@ public class Handler {
 		for (int i = 0; i < series.size(); i++) {
 			newEpisode.add(new Series(series.get(i).getName(), series.get(i).getLatestSeason(), series.get(i).getLatestEpisode()+1, series.get(i).getSubtitles()));
 		}
+		newEpisode = stringify(newEpisode);
 		return newEpisode;
 	}
-	
+
 	/**
 	 * Gets series information from database and increases season number by one and sets episode number to one. This is used for searching series with new season
 	 * @return Most recent serie information from database, where season number is increased by one
@@ -77,7 +80,27 @@ public class Handler {
 		for (int i = 0; i < series.size(); i++) {
 			newSeason.add(new Series(series.get(i).getName(), series.get(i).getLatestSeason()+1, 1, series.get(i).getSubtitles()));
 		}
+		newSeason = stringify(newSeason);
 		return newSeason;
+	}
+	
+	private static ArrayList<Series> stringify(ArrayList<Series> series) {
+		for (int i = 0; i < series.size(); i++) {
+			String sSeason = null;
+			String sEpisode = null;
+			if (series.get(i).getLatestSeason()<10) {
+				sSeason = "0"+series.get(i).getLatestSeason();
+			} else {
+				sSeason = Integer.toString(series.get(i).getLatestSeason());
+			}
+			if (series.get(i).getLatestEpisode()<10) {
+				sEpisode = "0"+series.get(i).getLatestEpisode();
+			} else {
+				sEpisode = Integer.toString(series.get(i).getLatestEpisode());
+			}
+			series.get(i).setSSeaEp("s" + sSeason + "e" + sEpisode);
+		}
+		return series;		
 	}
 	
 	/**
@@ -100,9 +123,8 @@ public class Handler {
 			statement.setString(3, serie.getName());
 			statement.executeUpdate();
 		} catch (Exception e) {
-			e.printStackTrace();
-			Email.send("t.s.partanen@gmail.com", "HÄLYTYS", "TVSeriesFollower ei voinut päivittää tietokantaansa ja on sammutettu");
 			closeConnection();
+			Email.unknownCrash(e);
 			System.exit(0);
 		}
 		finally {
