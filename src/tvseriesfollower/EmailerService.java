@@ -18,12 +18,11 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-public class Email {
-	final private static String username = "TVSeriesFollower";
-	final private static String password = "x"; //Ofc not a real password. The program will crash if you don't change this to the real one.
-	final private static String eol = System.getProperty("line.separator");
-    private Email() {
-    }
+public class EmailerService {
+	// TODO: load credentials from a file
+	final private String username = "TVSeriesFollower";
+	final private String password = "x"; //Ofc not a real password. The program will crash if you don't change this to the real one.
+	final private String eol = System.getProperty("line.separator");
     
     /**
      * 
@@ -34,38 +33,50 @@ public class Email {
      * @throws MessagingException if the connection is dead or not in the connected state or if the message is not a MimeMessage
      */
     
-	static void massMail(ArrayList<String> followers, String emailTitle, String emailMessage) throws AddressException, MessagingException {
-		for (int z = 0; z < followers.size(); z++) {
-			Email.send(followers.get(z), emailTitle, emailMessage);
+	public void sendMassMail(Serie serie, Torrent torrent, ArrayList<String> followers) {
+		String emailTitle = "New episode of " + serie.getName() + " released";
+		String emailMessage = "Hello!<br>New episode " + "of " + serie.getName() + " is out.<br>"
+				+ "You can download the episode by clicking the following link or by copying the magnet URL and adding it manyally to your torrent client:<br>"
+				+ "<a href=\"" + torrent.getMagnet() + "\">" + torrent.getMagnet() + "</a><br><br>Link to the torrent page: " 
+				+ "<a href=\"" + torrent.getUrl() + "\">" + torrent.getUrl() + "</a><br><br>"
+				+ "You can find subtitles for this episode from here once they are released:<br>" 
+				+ "<a href=\"" + serie.getSubtitles() + "\">" + serie.getSubtitles() + "</a><br><br><br><i>-TVSeriesFollower</i>";
+		for (int i = 0; i < followers.size(); i++) {
+			try {
+				sendEmail(followers.get(i), emailTitle, emailMessage);
+			} catch (MessagingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 	
-	public static void unknownCrash(Throwable e) throws AddressException, MessagingException {
+	public void unknownCrash(Throwable e) throws AddressException, MessagingException {
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = new PrintWriter(sw);
 		e.printStackTrace(pw);
     	final String recipientEmail = "t.s.partanen@gmail.com";
     	final String title = "TVSeriesFollower has crashed";
     	final String message = "TVSeriesFollower has encountered an unsuspected crash. Stacktrace: " + sw;
-        Email.send(recipientEmail, title, message);
+        sendEmail(recipientEmail, title, message);
 	}
 	
-	public static void knownCrash(Throwable e) throws AddressException, MessagingException {
+	public void knownCrash(Throwable e) throws AddressException, MessagingException {
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = new PrintWriter(sw);
 		e.printStackTrace(pw);
     	final String recipientEmail = "t.s.partanen@gmail.com";
     	final String title = "Hälytys - Virhe";
     	final String message = "TVSeriesFollower encountered an error while processing a web page. It should still be running. Stacktrace:" + sw;
-        Email.send(recipientEmail, title, message);
+        sendEmail(recipientEmail, title, message);
 	}
     
-    public static void error(int errors, Date lasterrordate, long difference) throws AddressException, MessagingException {
+    public void error(int errors, Date lasterrordate, long difference) throws AddressException, MessagingException {
     	final String recipientEmail = "t.s.partanen@gmail.com";
     	final String title = "TVSeriesFollower has encountered too many errors";
     	final String message = "TVSeriesFollower has encountered " + errors + " errors." + eol + "Last time you received this email: " + lasterrordate + "," + eol
     			+ "which was " + difference + " hours ago.";
-        Email.send(recipientEmail, title, message);
+        sendEmail(recipientEmail, title, message);
     }
 
     /**
@@ -80,7 +91,7 @@ public class Email {
      * @throws AddressException if the email address parse failed
      * @throws MessagingException if the connection is dead or not in the connected state or if the message is not a MimeMessage
      */
-    public static void send(String recipientEmail, String title, String message) throws AddressException, MessagingException {
+    private void sendEmail(String recipientEmail, String title, String message) throws AddressException, MessagingException {
         Security.addProvider(new com.sun.net.ssl.internal.ssl.Provider());
         final String SSL_FACTORY = "javax.net.ssl.SSLSocketFactory";
 

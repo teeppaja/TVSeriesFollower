@@ -1,31 +1,31 @@
 package tvseriesfollower;
 
-public class Series {
+public class Serie {
 	String name;
 	int latestSeason;
 	int latestEpisode;
 	String subtitles;
-	String sSeaEp;
+	String stringifiedSeasonAndEpisode;
 	
-	public Series() {
+	public Serie() {
 		super();
 	}
 
-	public Series(String name, int latestSeason, int latestEpisode) {
+	public Serie(String name, int latestSeason, int latestEpisode) {
 		super();
 		this.name = name;
 		this.latestSeason = latestSeason;
 		this.latestEpisode = latestEpisode;
 	}
 	
-	public Series(int latestSeason, int latestEpisode) {
+	public Serie(int latestSeason, int latestEpisode) {
 		super();
 		this.name = null;
 		this.latestSeason = latestSeason;
 		this.latestEpisode = latestEpisode;
 	}
 
-	public Series(String name, int latestSeason, int latestEpisode,
+	public Serie(String name, int latestSeason, int latestEpisode,
 			String subtitles) {
 		super();
 		this.name = name;
@@ -42,12 +42,12 @@ public class Series {
 		this.name = name;
 	}
 	
-	public String getSSeaEp() {
-		return sSeaEp;
+	public String getStringifiedSeasonAndEpisode() {
+		return stringifiedSeasonAndEpisode;
 	}
 
-	public void setSSeaEp(String sSeaEp) {
-		this.sSeaEp = sSeaEp;
+	public void setStringifiedSeasonAndEpisode(String stringifiedSeasonAndEpisode) {
+		this.stringifiedSeasonAndEpisode = stringifiedSeasonAndEpisode;
 	}
 
 	public int getLatestSeason() {
@@ -76,9 +76,9 @@ public class Series {
 
 	@Override
 	public String toString() {
-		return "Series [name=" + name + ", latestSeason=" + latestSeason
-				+ ", latestEpisode=" + latestEpisode + ", subtitles="
-				+ subtitles + ", sSeaEp=" + sSeaEp + "]";
+		return "Serie [name = " + name + ", latestSeason = " + latestSeason
+				+ ", latestEpisode = " + latestEpisode + ", subtitles = "
+				+ subtitles + ", stringifiedSeasonAndEpisode = " + stringifiedSeasonAndEpisode + "]";
 	}
 
 }

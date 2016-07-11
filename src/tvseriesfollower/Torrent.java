@@ -1,14 +1,14 @@
 package tvseriesfollower;
 
-public class Torrents {
+public class Torrent {
 	String url, name, magnet, uploader;
 	int seeds;
 	
-	public Torrents() {
+	public Torrent() {
 		super();
 	}
 
-	public Torrents(String url, String name, String magnet, String uploader, int seeds) {
+	public Torrent(String url, String name, String magnet, String uploader, int seeds) {
 		super();
 		this.url = url;
 		this.name = name;
